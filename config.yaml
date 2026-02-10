@@ -1,0 +1,16 @@
+# Home Dashboard 后端配置
+
+server:
+  port: "8090"
+
+# Basic 认证配置
+auth:
+  enabled: false
+  username: "admin"
+  password: "admin"
+
+# 页面配置文件存放目录
+pages_dir: "./pages"
+
+# 前端构建目录
+frontend_dir: "./frontend/build"

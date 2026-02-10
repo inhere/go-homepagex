@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  home-dashboard:
+    build: .
+    container_name: home-dashboard
+    ports:
+      - "8080:8080"
+    volumes:
+      # 挂载页面配置目录，方便修改
+      - ./pages:/app/pages:ro
+      # 挂载配置文件
+      - ./config:/app/config:ro
+    restart: unless-stopped
