@@ -1,0 +1,104 @@
+# Home Dashboard 主页面配置
+# 参考: https://github.com/bastienwirtz/homer
+title: "Home Dashboard"
+subtitle: "Welcome to your dashboard"
+logo: "logo.png"
+
+theme: "default"
+color: "blue"
+style: "cards"  # cards 或 list
+columns: "3"
+
+connectivity:
+  check_interval: 30000
+  mode: "ping"
+
+services:
+  - name: "Media"
+    icon: "fas fa-play-circle"
+    items:
+      - name: "Plex"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png"
+        subtitle: "Media server"
+        tag: "app"
+        url: "https://plex.example.com"
+        target: "_blank"
+      
+      - name: "Jellyfin"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png"
+        subtitle: "Open source media server"
+        tag: "app"
+        url: "https://jellyfin.example.com"
+        target: "_blank"
+      
+      - name: "Sonarr"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png"
+        subtitle: "TV shows management"
+        tag: "app"
+        url: "https://sonarr.example.com"
+        target: "_blank"
+
+  - name: "Development"
+    icon: "fas fa-code"
+    items:
+      - name: "GitLab"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gitlab.png"
+        subtitle: "Git repository"
+        tag: "dev"
+        url: "https://gitlab.example.com"
+        target: "_blank"
+      
+      - name: "Jenkins"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jenkins.png"
+        subtitle: "CI/CD platform"
+        tag: "dev"
+        url: "https://jenkins.example.com"
+        target: "_blank"
+      
+      - name: "Portainer"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png"
+        subtitle: "Docker management"
+        tag: "dev"
+        url: "https://portainer.example.com"
+        target: "_blank"
+
+  - name: "System"
+    icon: "fas fa-server"
+    items:
+      - name: "Proxmox"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png"
+        subtitle: "Virtualization"
+        tag: "system"
+        url: "https://proxmox.example.com"
+        target: "_blank"
+      
+      - name: "TrueNAS"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/truenas.png"
+        subtitle: "NAS storage"
+        tag: "system"
+        url: "https://truenas.example.com"
+        target: "_blank"
+      
+      - name: "Pi-hole"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pihole.png"
+        subtitle: "DNS ad blocker"
+        tag: "system"
+        url: "https://pihole.example.com"
+        target: "_blank"
+
+  - name: "Network"
+    icon: "fas fa-network-wired"
+    items:
+      - name: "Router"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/openwrt.png"
+        subtitle: "OpenWrt"
+        tag: "network"
+        url: "https://192.168.1.1"
+        target: "_blank"
+      
+      - name: "Unifi"
+        logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/unifi.png"
+        subtitle: "Network controller"
+        tag: "network"
+        url: "https://unifi.example.com"
+        target: "_blank"
