@@ -9,10 +9,17 @@
       window.location.href = item.url;
     }
   }
+
+  function handleKeydown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleClick();
+    }
+  }
 </script>
 
 {#if style === 'cards'}
-  <div class="service-item card" on:click={handleClick} role="button" tabindex="0">
+  <div class="service-item card" on:click={handleClick} on:keydown={handleKeydown} role="button" tabindex="0">
     <div class="item-logo">
       {#if item.logo}
         <img src={item.logo} alt={item.name} />
@@ -35,7 +42,7 @@
     </div>
   </div>
 {:else}
-  <div class="service-item list" on:click={handleClick} role="button" tabindex="0">
+  <div class="service-item list" on:click={handleClick} on:keydown={handleKeydown} role="button" tabindex="0">
     <div class="item-logo">
       {#if item.logo}
         <img src={item.logo} alt={item.name} />

@@ -6,8 +6,7 @@
 
 ```
 home-dashboard/
-├── backend/          # Go 后端服务
-│   ├── main.go       # 入口文件
+├── internal/          # Go 后端服务
 │   ├── config.go     # 配置加载
 │   ├── page.go       # 页面配置解析
 │   ├── auth.go       # Basic 认证
@@ -16,11 +15,11 @@ home-dashboard/
 │   └── build/        # 构建输出
 │       ├── index.html
 │       └── app.js
-├── config/           # 后端配置
-│   └── config.yaml
 ├── pages/            # 页面 YAML 配置
 │   ├── main.yaml     # 主页面配置
 │   └── page-another.yaml
+├── config.yaml   # 后端配置
+├── main.go       # Go 入口文件
 └── README.md
 ```
 
