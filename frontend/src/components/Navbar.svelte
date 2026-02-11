@@ -1,19 +1,20 @@
 <script>
   export let navs = [];
   export let currentPath = '/';
+  export let onNavigate = () => {};
 </script>
 
 <nav class="navbar">
   <div class="nav-list">
     {#each navs as nav}
-      <a
-        href={nav.url}
+      <button
         class="nav-item"
         class:active={currentPath === nav.url}
+        on:click={() => onNavigate(nav.url)}
       >
         <i class={nav.icon}></i>
         <span>{nav.name}</span>
-      </a>
+      </button>
     {/each}
   </div>
 </nav>
@@ -42,6 +43,9 @@
     border-radius: 8px;
     transition: all 0.3s ease;
     font-size: 0.95rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
   }
 
   .nav-item:hover {

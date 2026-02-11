@@ -41,15 +41,15 @@
   }
 
   // 加载页面配置
-  async function loadConfig() {
+  async function loadConfig(route) {
+    const currentRoutePath = route || getRoute();
     loading = true;
     error = null;
 
     try {
-      const route = getRoute();
-      currentRoute.set(route);
+      currentRoute.set(currentRoutePath);
 
-      const response = await fetch(`/api/page${route === '/' ? '' : route}`);
+      const response = await fetch(`/api/page${currentRoutePath === '/' ? '' : currentRoutePath}`);
       const result = await response.json();
 
       if (!result.success) {
@@ -67,11 +67,19 @@
     }
   }
 
+  // 处理导航（单页应用）
+  function handleNavigate(route) {
+    if (route !== getRoute()) {
+      history.pushState({}, '', route);
+      loadConfig(route);
+    }
+  }
+
   onMount(() => {
     loadConfig();
 
     // 监听浏览器前进后退
-    window.addEventListener('popstate', loadConfig);
+    window.addEventListener('popstate', () => loadConfig());
 
     return () => {
       window.removeEventListener('popstate', loadConfig);
@@ -107,7 +115,7 @@
       />
 
       {#if $pageConfig.navs && $pageConfig.navs.length > 0}
-        <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} />
+        <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} onNavigate={handleNavigate} />
       {/if}
 
       <Toolbar

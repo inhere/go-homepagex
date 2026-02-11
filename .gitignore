@@ -1,5 +1,4 @@
 # Binaries
-backend/home-dashboard
 *.exe
 *.dll
 *.so
