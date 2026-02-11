@@ -55,7 +55,7 @@
     <div class="item-content">
       <h3>{item.name}</h3>
       {#if item.subtitle}
-        <p class="subtitle">{item.subtitle}</p>
+        <p class="item-subtitle">{item.subtitle}</p>
       {/if}
     </div>
     {#if item.tag}
@@ -159,7 +159,7 @@
     font-size: 1rem;
   }
 
-  .subtitle {
+  .item-subtitle {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.6);
     margin: 4px 0 0 0;
@@ -168,7 +168,7 @@
     text-overflow: ellipsis;
   }
 
-  .list .subtitle {
+  .list .item-subtitle {
     font-size: 0.8rem;
     margin-top: 2px;
   }

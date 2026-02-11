@@ -2,11 +2,29 @@
   import { onMount } from 'svelte';
   import Header from './components/Header.svelte';
   import Navbar from './components/Navbar.svelte';
+  import Toolbar from './components/Toolbar.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
   import { pageConfig, currentRoute, viewStyle } from './stores.js';
 
   let loading = true;
   let error = null;
+  let searchQuery = '';
+  let filteredServices = [];
+
+  $: {
+    if (searchQuery.trim()) {
+      filteredServices = ($pageConfig.services || []).map(service => ({
+        ...service,
+        items: (service.items || []).filter(item =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      })).filter(service => service.items.length > 0);
+    } else {
+      filteredServices = $pageConfig.services || [];
+    }
+  }
 
   // 获取当前路由
   function getRoute() {
@@ -18,18 +36,18 @@
   async function loadConfig() {
     loading = true;
     error = null;
-    
+
     try {
       const route = getRoute();
       currentRoute.set(route);
-      
+
       const response = await fetch(`/api/page${route === '/' ? '' : route}`);
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to load config');
       }
-      
+
       pageConfig.set(result.data);
       viewStyle.set(result.data.style || 'cards');
     } catch (err) {
@@ -41,18 +59,17 @@
 
   onMount(() => {
     loadConfig();
-    
+
     // 监听浏览器前进后退
     window.addEventListener('popstate', loadConfig);
-    
+
     return () => {
       window.removeEventListener('popstate', loadConfig);
     };
   });
 
-  // 切换视图样式
-  function toggleStyle() {
-    viewStyle.update(style => style === 'cards' ? 'list' : 'cards');
+  function handleSearch(query) {
+    searchQuery = query;
   }
 </script>
 
@@ -73,29 +90,28 @@
       <span>{error}</span>
     </div>
   {:else}
-    <Header 
-      title={$pageConfig.title} 
+    <Header
+      title={$pageConfig.title}
       subtitle={$pageConfig.subtitle}
       logo={$pageConfig.logo}
     />
-    
+
     {#if $pageConfig.navs && $pageConfig.navs.length > 0}
       <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} />
     {/if}
-    
-    <div class="toolbar">
-      <button class="style-toggle" on:click={toggleStyle}>
-        <i class="fas {$viewStyle === 'cards' ? 'fa-list' : 'fa-th-large'}"></i>
-        <span>{$viewStyle === 'cards' ? 'List View' : 'Card View'}</span>
-      </button>
-    </div>
+
+    <Toolbar
+      services={$pageConfig.services || []}
+      bind:viewStyle={$viewStyle}
+      onSearch={handleSearch}
+    />
 
     <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
-      {#each $pageConfig.services || [] as service}
+      {#each filteredServices as service}
         <ServiceGroup {service} style={$viewStyle} />
       {/each}
     </div>
-    
+
     {#if $pageConfig.footer}
       <footer class="footer">
         {$pageConfig.footer}
@@ -143,37 +159,13 @@
     color: #e74c3c;
   }
 
-  .toolbar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-  }
-
-  .style-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: #e4e4e4;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-  }
-
-  .style-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-  }
-
   .services-container {
     display: grid;
     grid-template-columns: repeat(var(--columns, 3), 1fr);
     gap: 24px;
   }
 
+  /* Responsive */
   @media (max-width: 1200px) {
     .services-container {
       grid-template-columns: repeat(2, 1fr);
