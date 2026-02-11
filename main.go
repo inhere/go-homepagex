@@ -47,9 +47,10 @@ func main() {
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", config.Server.Port)
-	log.Printf("Starting server on http://localhost%s", addr)
-	log.Printf("Pages directory: %s", config.PagesDir)
+	log.Printf("🚀 Starting server on http://localhost%s", addr)
+	log.Printf("Page data directory: %s", config.PagesDir)
 	log.Printf("Frontend directory: %s", config.FrontendDir)
+	fmt.Println()
 	if config.Auth.Enabled {
 		log.Printf("Basic auth enabled for user: %s", config.Auth.Username)
 	}

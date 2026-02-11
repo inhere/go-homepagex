@@ -23,6 +23,9 @@ type PageConfig struct {
 	Connectivity Connectivity `yaml:"connectivity" json:"connectivity"`
 	Services     []Service    `yaml:"services" json:"services"`
 	Navs         []NavItem    `yaml:"navs" json:"navs"`
+
+	// 内部设置，页面配置文件路径
+	Pagefile     string       `yaml:"-" json:"-"`
 }
 
 // Connectivity 连接检查配置
@@ -76,6 +79,9 @@ func LoadPageConfig(route, pageDir string, defaultNavs []NavItem) (*PageConfig, 
 	if err := yaml.Unmarshal(data, &page); err != nil {
 		return nil, fmt.Errorf("failed to parse page config: %w", err)
 	}
+
+	// 记录页面配置文件路径
+	page.Pagefile = pagefile
 
 	// 设置默认值
 	if page.Style == "" {

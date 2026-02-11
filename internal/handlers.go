@@ -8,7 +8,12 @@ import (
 	"strings"
 )
 
-// GetPageConfigHandler 获取页面配置
+// HealthHandler 健康检查
+func (s *Server) HealthHandler(w http.ResponseWriter, r *http.Request) {
+	s.sendJSON(w, map[string]string{"status": "ok"})
+}
+
+// GetPageConfigHandler 获取页面配置数据
 func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -20,20 +25,16 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if path == "" {
 		path = "/"
 	}
-	log.Printf("Request GET %s", r.URL.Path)
 
 	pageConfig, err := LoadPageConfig(path, s.config.PagesDir, s.config.Navs)
 	if err != nil {
+		log.Printf("Error loading page data for %s: %v", r.URL.Path, err)
 		s.sendError(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
+	log.Printf("Request GET %s, Pagefile: %s", r.URL.Path, pageConfig.Pagefile)
 	s.sendJSON(w, pageConfig)
-}
-
-// HealthHandler 健康检查
-func (s *Server) HealthHandler(w http.ResponseWriter, r *http.Request) {
-	s.sendJSON(w, map[string]string{"status": "ok"})
 }
 
 // StaticFileHandler 静态文件服务
