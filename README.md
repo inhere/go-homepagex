@@ -1,11 +1,11 @@
 # Home Dashboard
 
-一个类似 Homer 的导航主页，使用 Go + Svelte 实现。
+一个非常轻量的类似 Homer 的导航主页，使用 Go + Svelte 实现。
 
 ## 项目结构
 
-```
-home-dashboard/
+```txt
+go-homepagex/
 ├── internal/          # Go 后端服务
 │   ├── config.go     # 配置加载
 │   ├── page.go       # 页面配置解析
@@ -34,45 +34,19 @@ home-dashboard/
 
 ## 快速开始
 
-### 1. 安装依赖
-
-**Go (1.21+)**:
-```bash
-# 下载并安装 Go
-wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
-```
-
-### 2. 编译后端
+下载 Github release 最新版本:
 
 ```bash
-cd backend
-go mod tidy
-go build -o home-dashboard
+wget https://github.com/inhere/go-homepagex/releases/latest/download/homepagex-linux-amd64
 ```
-
-### 3. 运行
-
-```bash
-# 使用默认配置
-./backend/home-dashboard
-
-# 或使用自定义配置文件
-./backend/home-dashboard /path/to/config.yaml
-```
-
-### 4. 访问
-
-打开浏览器访问: http://localhost:8080
 
 ## 配置说明
 
-### 后端配置 (config/config.yaml)
+### 后端配置 (config.yaml)
 
 ```yaml
 server:
-  port: "8080"
+  port: "8090"
 
 # Basic 认证配置
 auth:
@@ -123,15 +97,58 @@ services:
 
 ## 开发
 
-### 前端开发
+### 1. 安装依赖
 
-前端使用原生 JavaScript，无需构建步骤。直接编辑 `frontend/build/` 目录下的文件即可。
+**Go (1.21+)**:
+```bash
+# 下载并安装 Go
+wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+```
 
-### 后端开发
+### 2. 编译后端
 
 ```bash
-cd backend
-go run . ../config/config.yaml
+go mod tidy
+go build -o homepagex
+```
+
+### 3. 运行
+
+```bash
+# 使用默认配置
+./homepagex
+
+# 或使用自定义配置文件
+./homepagex /path/to/config.yaml
+```
+
+### 4. 访问
+
+打开浏览器访问: http://localhost:8080
+
+### 前端开发
+
+前端使用 Svelte 框架。
+
+#### 1. 安装依赖
+
+```bash
+cd frontend
+pnpm install
+```
+
+#### 2. 开发模式
+
+```bash
+pnpm run dev
+```
+
+#### 3. 构建
+
+```bash
+pnpm run build
 ```
 
 ## 图标
