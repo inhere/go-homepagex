@@ -4,8 +4,46 @@ import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import terser from '@rollup/plugin-terser';
 import css from 'rollup-plugin-css-only';
+import fs from 'fs';
+import path from 'path';
 
 const production = !process.env.ROLLUP_WATCH;
+
+function copyPublic() {
+	return {
+		name: 'copy-public',
+		buildStart() {
+			const publicDir = 'public';
+			const buildDir = 'build';
+			
+			if (!fs.existsSync(buildDir)) {
+				fs.mkdirSync(buildDir, { recursive: true });
+			}
+			
+			if (fs.existsSync(publicDir)) {
+				copyDir(publicDir, buildDir);
+			}
+		}
+	};
+}
+
+function copyDir(src, dest) {
+	const entries = fs.readdirSync(src, { withFileTypes: true });
+	
+	for (const entry of entries) {
+		const srcPath = path.join(src, entry.name);
+		const destPath = path.join(dest, entry.name);
+		
+		if (entry.isDirectory()) {
+			if (!fs.existsSync(destPath)) {
+				fs.mkdirSync(destPath, { recursive: true });
+			}
+			copyDir(srcPath, destPath);
+		} else {
+			fs.copyFileSync(srcPath, destPath);
+		}
+	}
+}
 
 function serve() {
 	let server;
@@ -57,6 +95,9 @@ export default {
 			dedupe: ['svelte']
 		}),
 		commonjs(),
+
+		// Copy public directory to build
+		copyPublic(),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
