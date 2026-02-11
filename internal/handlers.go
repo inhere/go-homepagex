@@ -1,19 +1,12 @@
 package internal
 
 import (
-	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-// APIResponse API 响应结构
-type APIResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Error   string      `json:"error,omitempty"`
-}
 
 // GetPageConfigHandler 获取页面配置
 func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +21,7 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 		path = "/"
 	}
 
-	pageConfig, err := s.LoadPageConfig(path)
+	pageConfig, err := LoadPageConfig(s.config.PagesDir, path)
 	if err != nil {
 		s.sendError(w, err.Error(), http.StatusNotFound)
 		return
@@ -42,29 +35,10 @@ func (s *Server) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	s.sendJSON(w, map[string]string{"status": "ok"})
 }
 
-// sendJSON 发送 JSON 响应
-func (s *Server) sendJSON(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(APIResponse{
-		Success: true,
-		Data:    data,
-	})
-}
-
-// sendError 发送错误响应
-func (s *Server) sendError(w http.ResponseWriter, message string, status int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(APIResponse{
-		Success: false,
-		Error:   message,
-	})
-}
-
 // StaticFileHandler 静态文件服务
 func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 	// 清理路径防止目录遍历
-	path := strings.TrimPrefix(r.URL.Path, "/")
+	path := strings.TrimLeft(r.URL.Path, "/.")
 	if path == "" {
 		path = "index.html"
 	}
@@ -83,6 +57,8 @@ func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 			fullPath = filepath.Join(s.config.FrontendDir, "index.html")
 		}
 	}
+
+	log.Printf("Request path: %s, Serving file: %s", r.URL.Path, fullPath)
 
 	// 设置正确的 Content-Type
 	contentType := getContentType(fullPath)

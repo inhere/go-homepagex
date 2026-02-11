@@ -41,7 +41,7 @@ func LoadConfig(path string) (*Config, error) {
 
 	// 设置默认值
 	if config.Server.Port == "" {
-		config.Server.Port = "8080"
+		config.Server.Port = "8090"
 	}
 	if config.PagesDir == "" {
 		config.PagesDir = "./pages"
