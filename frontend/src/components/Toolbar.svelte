@@ -1,11 +1,16 @@
 <script>
+  import { viewStyle, themes, currentTheme, getThemeColors } from '../stores.js';
+
   export let services = [];
-  export let viewStyle = 'cards';
   export let onSearch = () => {};
 
   let searchQuery = '';
   let showResults = false;
+  let showThemeDropdown = false;
   let filteredItems = [];
+
+  $: themeColors = getThemeColors($currentTheme);
+  $: currentThemeName = themes.find(t => t.id === $currentTheme)?.name || '默认主题';
 
   $: {
     if (searchQuery.trim()) {
@@ -39,7 +44,12 @@
   }
 
   function toggleStyle() {
-    viewStyle = viewStyle === 'cards' ? 'list' : 'cards';
+    viewStyle.update(style => style === 'cards' ? 'list' : 'cards');
+  }
+
+  function selectTheme(themeId) {
+    currentTheme.set(themeId);
+    showThemeDropdown = false;
   }
 
   function navigateTo(url, target) {
@@ -56,12 +66,19 @@
   function handleKeydown(event) {
     if (event.key === 'Escape') {
       showResults = false;
+      showThemeDropdown = false;
       document.querySelector('.search-input').blur();
+    }
+  }
+
+  function handleClickOutside(event) {
+    if (!event.target.closest('.theme-selector')) {
+      showThemeDropdown = false;
     }
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window on:keydown={handleKeydown} on:click={handleClickOutside} />
 
 <div class="toolbar">
   <div class="search-container">
@@ -109,10 +126,48 @@
     {/if}
   </div>
 
-  <button class="style-toggle" on:click={toggleStyle}>
-    <i class="fas {viewStyle === 'cards' ? 'fa-list' : 'fa-th-large'}"></i>
-    <span>{viewStyle === 'cards' ? 'List View' : 'Card View'}</span>
-  </button>
+  <div class="toolbar-actions">
+    <div class="theme-selector">
+      <button 
+        class="theme-btn"
+        on:click|stopPropagation={() => showThemeDropdown = !showThemeDropdown}
+      >
+        <div 
+          class="theme-indicator"
+          style="background: linear-gradient(135deg, {themeColors.primary}, {themeColors.secondary})"
+        ></div>
+        <span class="theme-name">{currentThemeName}</span>
+        <i class="fas fa-chevron-down" class:open={showThemeDropdown}></i>
+      </button>
+
+      {#if showThemeDropdown}
+        <div class="theme-dropdown">
+          {#each themes as theme}
+            {@const colors = getThemeColors(theme.id)}
+            <button 
+              class="theme-option"
+              class:active={$currentTheme === theme.id}
+              on:click={() => selectTheme(theme.id)}
+            >
+              <div 
+                class="theme-preview"
+                style="background: linear-gradient(135deg, {colors.primary}, {colors.secondary})"
+              ></div>
+              <span>{theme.name}</span>
+              {#if $currentTheme === theme.id}
+                <i class="fas fa-check"></i>
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+
+    <button class="style-toggle" on:click={toggleStyle}>
+      <i class="fas {$viewStyle === 'cards' ? 'fa-list' : 'fa-th-large'}"></i>
+      <span>{$viewStyle === 'cards' ? 'List View' : 'Card View'}</span>
+    </button>
+  </div>
 </div>
 
 <style>
@@ -142,7 +197,7 @@
 
   .search-box:focus-within {
     background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(102, 126, 234, 0.5);
+    border-color: var(--theme-primary-rgba);
   }
 
   .search-box i {
@@ -219,7 +274,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(102, 126, 234, 0.2);
+    background: var(--theme-primary-rgba);
     border-radius: 8px;
   }
 
@@ -231,7 +286,7 @@
   }
 
   .result-icon i {
-    color: #667eea;
+    color: var(--theme-primary);
     font-size: 1rem;
   }
 
@@ -256,12 +311,110 @@
 
   .result-tag {
     padding: 2px 8px;
-    background: rgba(102, 126, 234, 0.3);
-    color: #a5b4fc;
+    background: var(--theme-primary-rgba);
+    color: var(--theme-primary);
     font-size: 0.7rem;
     font-weight: 500;
     border-radius: 4px;
     text-transform: uppercase;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .theme-selector {
+    position: relative;
+  }
+
+  .theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #e4e4e4;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+  }
+
+  .theme-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .theme-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .theme-name {
+    white-space: nowrap;
+  }
+
+  .theme-btn i {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+  }
+
+  .theme-btn i.open {
+    transform: rotate(180deg);
+  }
+
+  .theme-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 1000;
+    min-width: 180px;
+    backdrop-filter: blur(10px);
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: #e4e4e4;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+
+  .theme-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .theme-option.active {
+    background: var(--theme-primary-rgba);
+  }
+
+  .theme-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .theme-option i {
+    margin-left: auto;
+    color: var(--theme-primary);
+    font-size: 0.85rem;
   }
 
   .style-toggle {
@@ -294,12 +447,30 @@
       width: 100%;
     }
 
+    .toolbar-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .theme-name {
+      display: none;
+    }
+
+    .theme-btn {
+      padding: 10px 14px;
+    }
+
     .style-toggle span {
       display: none;
     }
 
     .style-toggle {
       padding: 10px 14px;
+    }
+
+    .theme-dropdown {
+      right: 0;
+      min-width: 160px;
     }
   }
 </style>

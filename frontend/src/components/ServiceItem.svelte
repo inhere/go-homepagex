@@ -83,7 +83,7 @@
 
   .service-item.card:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(102, 126, 234, 0.5);
+    border-color: var(--theme-primary-rgba);
     transform: translateX(4px);
   }
 
@@ -100,7 +100,7 @@
 
   .service-item.list:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(102, 126, 234, 0.3);
+    border-color: var(--theme-primary-rgba);
   }
 
   .item-logo {
@@ -120,7 +120,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
     border-radius: 8px;
     color: white;
     font-size: 1.2rem;
@@ -176,8 +176,8 @@
   .tag {
     display: inline-block;
     padding: 2px 8px;
-    background: rgba(102, 126, 234, 0.3);
-    color: #a5b4fc;
+    background: var(--theme-primary-rgba);
+    color: var(--theme-primary);
     font-size: 0.7rem;
     font-weight: 500;
     border-radius: 4px;
@@ -191,7 +191,7 @@
 
   /* Focus styles for accessibility */
   .service-item:focus {
-    outline: 2px solid #667eea;
+    outline: 2px solid var(--theme-primary);
     outline-offset: 2px;
   }
 </style>

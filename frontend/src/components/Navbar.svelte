@@ -50,8 +50,8 @@
   }
 
   .nav-item.active {
-    background: rgba(102, 126, 234, 0.3);
-    color: #a5b4fc;
+    background: var(--theme-primary-rgba);
+    color: var(--theme-primary);
   }
 
   .nav-item i {

@@ -4,12 +4,20 @@
   import Navbar from './components/Navbar.svelte';
   import Toolbar from './components/Toolbar.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
-  import { pageConfig, currentRoute, viewStyle } from './stores.js';
+  import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors } from './stores.js';
 
   let loading = true;
   let error = null;
   let searchQuery = '';
   let filteredServices = [];
+
+  $: themeColors = getThemeColors($currentTheme);
+  $: themeVars = `
+    --theme-primary: ${themeColors.primary};
+    --theme-secondary: ${themeColors.secondary};
+    --theme-primary-rgba: ${themeColors.primary}33;
+    --theme-secondary-rgba: ${themeColors.secondary}33;
+  `;
 
   $: {
     if (searchQuery.trim()) {
@@ -49,7 +57,9 @@
       }
 
       pageConfig.set(result.data);
-      viewStyle.set(result.data.style || 'cards');
+      if (!localStorage.getItem('viewStyle')) {
+        viewStyle.set(result.data.style || 'cards');
+      }
     } catch (err) {
       error = err.message;
     } finally {
@@ -78,47 +88,48 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </svelte:head>
 
-<main class="app {$viewStyle}">
-  {#if loading}
-    <div class="loading">
-      <i class="fas fa-spinner fa-spin"></i>
-      <span>Loading...</span>
-    </div>
-  {:else if error}
-    <div class="error">
-      <i class="fas fa-exclamation-circle"></i>
-      <span>{error}</span>
-    </div>
-  {:else}
-    <Header
-      title={$pageConfig.title}
-      subtitle={$pageConfig.subtitle}
-      logo={$pageConfig.logo}
-    />
+<div class="theme-wrapper" style={themeVars}>
+  <main class="app {$viewStyle} theme-{$currentTheme}">
+    {#if loading}
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Loading...</span>
+      </div>
+    {:else if error}
+      <div class="error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{error}</span>
+      </div>
+    {:else}
+      <Header
+        title={$pageConfig.title}
+        subtitle={$pageConfig.subtitle}
+        logo={$pageConfig.logo}
+      />
 
-    {#if $pageConfig.navs && $pageConfig.navs.length > 0}
-      <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} />
+      {#if $pageConfig.navs && $pageConfig.navs.length > 0}
+        <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} />
+      {/if}
+
+      <Toolbar
+        services={$pageConfig.services || []}
+        onSearch={handleSearch}
+      />
+
+      <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
+        {#each filteredServices as service}
+          <ServiceGroup {service} style={$viewStyle} />
+        {/each}
+      </div>
+
+      {#if $pageConfig.footer}
+        <footer class="footer">
+          {$pageConfig.footer}
+        </footer>
+      {/if}
     {/if}
-
-    <Toolbar
-      services={$pageConfig.services || []}
-      bind:viewStyle={$viewStyle}
-      onSearch={handleSearch}
-    />
-
-    <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
-      {#each filteredServices as service}
-        <ServiceGroup {service} style={$viewStyle} />
-      {/each}
-    </div>
-
-    {#if $pageConfig.footer}
-      <footer class="footer">
-        {$pageConfig.footer}
-      </footer>
-    {/if}
-  {/if}
-</main>
+  </main>
+</div>
 
 <style>
   :global(*) {
@@ -132,6 +143,20 @@
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     min-height: 100vh;
     color: #e4e4e4;
+    transition: background 0.5s ease;
+  }
+
+  :global(:root) {
+    --theme-primary: #667eea;
+    --theme-secondary: #764ba2;
+    --theme-primary-rgba: rgba(102, 126, 234, 0.2);
+    --theme-secondary-rgba: rgba(118, 75, 162, 0.2);
+  }
+
+  .theme-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, var(--theme-primary-rgba) 50%, var(--theme-secondary-rgba) 100%);
+    transition: background 0.5s ease;
   }
 
   .app {

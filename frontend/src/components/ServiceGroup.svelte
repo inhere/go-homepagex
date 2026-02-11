@@ -44,7 +44,7 @@
 
   .group-header i {
     font-size: 1.5rem;
-    color: #667eea;
+    color: var(--theme-primary);
     width: 32px;
     text-align: center;
   }
