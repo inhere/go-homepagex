@@ -9,6 +9,8 @@ import (
 	"github.com/inhere/homepagex/internal"
 )
 
+var server *internal.Server
+
 func main() {
 	// 默认配置文件路径
 	configPath := "config.yaml"
@@ -20,30 +22,15 @@ func main() {
 	config, err := internal.LoadConfig(configPath)
 	if err != nil {
 		log.Printf("Warning: %v, using defaults", err)
-		config = &internal.Config{
-			Server: internal.ServerConfig{
-				Port: "8080",
-			},
-			Auth: internal.AuthConfig{
-				Enabled: false,
-			},
-			PagesDir:    "./pages",
-			FrontendDir: "./frontend/build",
-		}
 	}
 
-	server := internal.NewServer(config)
-
-	// 设置路由
+	// 初始化页面数据管理器
+	internal.Init(config)
+	server = internal.NewServer(config)
 	mux := http.NewServeMux()
 
-	// API 路由
-	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.GetPageConfigHandler))
-	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.GetPageConfigHandler))
-	mux.HandleFunc("/api/health", server.HealthHandler)
-
-	// 静态文件路由（前端应用）
-	mux.HandleFunc("/", server.BasicAuthMiddleware(server.StaticFileHandler))
+	// 注册路由
+	registerRoutes(mux)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", config.Server.Port)
@@ -56,6 +43,16 @@ func main() {
 	}
 
 	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatalf("Server failed: %v", err)
+		log.Fatalf("Server listen failed: %v", err)
 	}
+}
+
+func registerRoutes(mux *http.ServeMux) {
+	// API 路由
+	mux.HandleFunc("/api/health", server.HealthHandler)
+	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.GetPageConfigHandler))
+	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.GetPageConfigHandler))
+
+	// 静态文件路由（前端应用）
+	mux.HandleFunc("/", server.BasicAuthMiddleware(server.StaticFileHandler))
 }

@@ -22,11 +22,8 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 从 URL 路径获取路由
 	path := strings.TrimPrefix(r.URL.Path, "/api/page")
-	if path == "" {
-		path = "/"
-	}
 
-	pageConfig, err := LoadPageConfig(path, s.config.PagesDir, s.config.Navs)
+	pageConfig, err := PageDataMgr.GetPageConfig(path)
 	if err != nil {
 		log.Printf("Error loading page data for %s: %v", r.URL.Path, err)
 		s.sendError(w, err.Error(), http.StatusNotFound)

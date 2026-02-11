@@ -2,6 +2,23 @@
 
 一个非常轻量的类似 Homer 的导航主页，使用 Go + Svelte 实现。
 
+## 功能特性
+
+- **YAML 配置**: 类似 Homer 的 YAML 格式定义页面链接
+- **多页面支持**: `/` 对应 `home.yaml`，`/another` 对应 `another.yaml`
+- **视图切换**: 支持卡片视图和列表视图切换
+- **Basic 认证**: 可配置的用户名/密码验证
+- **FontAwesome 图标**: 支持 FontAwesome 图标
+- **响应式设计**: 适配桌面和移动设备
+
+## 快速开始
+
+下载 Github release 最新版本:
+
+```bash
+wget https://github.com/inhere/go-homepagex/releases/latest/download/homepagex-linux-amd64
+```
+
 ## 项目结构
 
 ```txt
@@ -16,28 +33,11 @@ go-homepagex/
 │       ├── index.html
 │       └── app.js
 ├── pages/            # 页面 YAML 配置
-│   ├── main.yaml     # 主页面配置
-│   └── page-another.yaml
+│   ├── home.yaml     # 主页面配置
+│   └── another.yaml
 ├── config.yaml   # 后端配置
 ├── main.go       # Go 入口文件
 └── README.md
-```
-
-## 功能特性
-
-- **YAML 配置**: 类似 Homer 的 YAML 格式定义页面链接
-- **多页面支持**: `/` 对应 `main.yaml`，`/another` 对应 `page-another.yaml`
-- **视图切换**: 支持卡片视图和列表视图切换
-- **Basic 认证**: 可配置的用户名/密码验证
-- **FontAwesome 图标**: 支持 FontAwesome 图标
-- **响应式设计**: 适配桌面和移动设备
-
-## 快速开始
-
-下载 Github release 最新版本:
-
-```bash
-wget https://github.com/inhere/go-homepagex/releases/latest/download/homepagex-linux-amd64
 ```
 
 ## 配置说明
@@ -91,9 +91,9 @@ services:
 
 ## 页面配置规则
 
-- `/` 路由对应 `pages/main.yaml`
-- `/another` 路由对应 `pages/page-another.yaml`
-- 依此类推: `{route}` -> `page-{route}.yaml`
+- `/` 路由对应 `pages/home.yaml`
+- `/another` 路由对应 `pages/another.yaml`
+- 依此类推: `{name}` -> `{name}.yaml`
 
 ## 开发
 
