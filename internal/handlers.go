@@ -20,8 +20,9 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if path == "" {
 		path = "/"
 	}
+	log.Printf("Request GET %s", r.URL.Path)
 
-	pageConfig, err := LoadPageConfig(s.config.PagesDir, path)
+	pageConfig, err := LoadPageConfig(path, s.config.PagesDir, s.config.Navs)
 	if err != nil {
 		s.sendError(w, err.Error(), http.StatusNotFound)
 		return
@@ -58,7 +59,7 @@ func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Request path: %s, Serving file: %s", r.URL.Path, fullPath)
+	log.Printf("Request static: %s, Serving file: %s", r.URL.Path, fullPath)
 
 	// 设置正确的 Content-Type
 	contentType := getContentType(fullPath)

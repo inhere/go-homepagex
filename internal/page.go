@@ -22,6 +22,7 @@ type PageConfig struct {
 	Columns      string       `yaml:"columns" json:"columns"`
 	Connectivity Connectivity `yaml:"connectivity" json:"connectivity"`
 	Services     []Service    `yaml:"services" json:"services"`
+	Navs         []NavItem    `yaml:"navs" json:"navs"`
 }
 
 // Connectivity 连接检查配置
@@ -52,18 +53,18 @@ type Item struct {
 }
 
 // LoadPageConfig 加载页面配置
-func LoadPageConfig(pageDir, route string) (*PageConfig, error) {
+func LoadPageConfig(route, pageDir string, defaultNavs []NavItem) (*PageConfig, error) {
 	var filename string
-	if route == "/" || route == "" {
+	// 移除开头的 /
+	route = strings.TrimLeft(route, "/")
+	if route == "" {
 		filename = "main.yaml"
 	} else {
-		// 移除开头的 /
-		route = strings.TrimPrefix(route, "/")
 		filename = fmt.Sprintf("page-%s.yaml", route)
 	}
 
-	path := filepath.Join(pageDir, filename)
-	data, err := os.ReadFile(path)
+	pagefile := filepath.Join(pageDir, filename)
+	data, err := os.ReadFile(pagefile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("page config not found: %s", filename)
@@ -84,5 +85,9 @@ func LoadPageConfig(pageDir, route string) (*PageConfig, error) {
 		page.Columns = "3"
 	}
 
+	// 如果页面没有配置 navs，使用默认配置
+	if len(page.Navs) == 0 {
+		page.Navs = defaultNavs
+	}
 	return &page, nil
 }

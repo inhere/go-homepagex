@@ -19,12 +19,20 @@ type AuthConfig struct {
 	Password string `yaml:"password"`
 }
 
+// NavItem 导航项
+type NavItem struct {
+	Name string `yaml:"name" json:"name"`
+	Icon string `yaml:"icon" json:"icon"`
+	URL  string `yaml:"url" json:"url"`
+}
+
 // Config 应用主配置
 type Config struct {
 	Server      ServerConfig `yaml:"server"`
 	Auth        AuthConfig   `yaml:"auth"`
 	PagesDir    string       `yaml:"pages_dir"`
 	FrontendDir string       `yaml:"frontend_dir"`
+	Navs        []NavItem    `yaml:"navs" json:"navs"`
 }
 
 // LoadConfig 从 YAML 文件加载配置

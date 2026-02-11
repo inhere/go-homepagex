@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Header from './components/Header.svelte';
+  import Navbar from './components/Navbar.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
   import { pageConfig, currentRoute, viewStyle } from './stores.js';
 
@@ -77,6 +78,10 @@
       subtitle={$pageConfig.subtitle}
       logo={$pageConfig.logo}
     />
+    
+    {#if $pageConfig.navs && $pageConfig.navs.length > 0}
+      <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} />
+    {/if}
     
     <div class="toolbar">
       <button class="style-toggle" on:click={toggleStyle}>

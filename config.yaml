@@ -14,3 +14,16 @@ pages_dir: "./pages"
 
 # 前端构建目录
 frontend_dir: "./frontend/build"
+
+# 默认导航配置
+navs:
+  - name: "Home"
+    icon: "fas fa-home"
+    url: "/"
+  - name: "Tools"
+    icon: "fas fa-tools"
+    url: "/tools"
+  - name: "Another"
+    icon: "fas fa-star"
+    url: "/another"
+
