@@ -3,13 +3,16 @@
   import Header from './components/Header.svelte';
   import Navbar from './components/Navbar.svelte';
   import Toolbar from './components/Toolbar.svelte';
+  import TagFilter from './components/TagFilter.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
   import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors } from './stores.js';
 
   let loading = true;
   let error = null;
   let searchQuery = '';
+  let selectedTag = '';
   let filteredServices = [];
+  let allTags = [];
 
   $: themeColors = getThemeColors($currentTheme);
   $: themeVars = `
@@ -25,11 +28,39 @@
     return keywords.every(keyword => lowerText.includes(keyword));
   }
 
+  function collectTags(services) {
+    const tagCount = {};
+    (services || []).forEach(service => {
+      (service.items || []).forEach(item => {
+        (item.tags || []).forEach(tag => {
+          tagCount[tag] = (tagCount[tag] || 0) + 1;
+        });
+      });
+    });
+    return Object.entries(tagCount)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  function filterByTag(services, tag) {
+    if (!tag) return services;
+    return services.map(service => ({
+      ...service,
+      items: (service.items || []).filter(item =>
+        (item.tags || []).includes(tag)
+      )
+    })).filter(service => service.items.length > 0);
+  }
+
   $: {
-    searchQuery = searchQuery.trim().toLowerCase();
+    const baseServices = $pageConfig.services || [];
+    allTags = collectTags(baseServices);
+
+    let result = baseServices;
+
     if (searchQuery.length > 1) {
       const keywords = searchQuery.split(/\s+/).filter(k => k.length > 0);
-      filteredServices = ($pageConfig.services || []).map(service => ({
+      result = result.map(service => ({
         ...service,
         items: (service.items || []).filter(item => {
           const searchFields = [
@@ -41,9 +72,13 @@
           return matchesAllKeywords(searchFields, keywords);
         })
       })).filter(service => service.items.length > 0);
-    } else {
-      filteredServices = $pageConfig.services || [];
     }
+
+    if (selectedTag) {
+      result = filterByTag(result, selectedTag);
+    }
+
+    filteredServices = result;
   }
 
   // 获取当前路由
@@ -57,6 +92,8 @@
     const currentRoutePath = route || getRoute();
     loading = true;
     error = null;
+    searchQuery = '';
+    selectedTag = '';
 
     try {
       currentRoute.set(currentRoutePath);
@@ -101,6 +138,10 @@
   function handleSearch(query) {
     searchQuery = query;
   }
+
+  function handleSelectTag(tag) {
+    selectedTag = tag;
+  }
 </script>
 
 <svelte:head>
@@ -132,10 +173,29 @@
 
       <Toolbar onSearch={handleSearch} />
 
-      <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
-        {#each filteredServices as service}
-          <ServiceGroup {service} style={$viewStyle} />
-        {/each}
+      <div class="main-content">
+        <aside class="sidebar">
+          <TagFilter
+            tags={allTags}
+            {selectedTag}
+            onSelectTag={handleSelectTag}
+          />
+        </aside>
+
+        <div class="services-wrapper">
+          {#if filteredServices.length === 0}
+            <div class="no-results">
+              <i class="fas fa-search"></i>
+              <p>没有找到匹配的服务</p>
+            </div>
+          {:else}
+            <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
+              {#each filteredServices as service}
+                <ServiceGroup {service} style={$viewStyle} />
+              {/each}
+            </div>
+          {/if}
+        </div>
       </div>
 
       {#if $pageConfig.footer}
@@ -176,7 +236,7 @@
   }
 
   .app {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
     min-height: 100vh;
@@ -200,6 +260,40 @@
     color: #e74c3c;
   }
 
+  .main-content {
+    display: flex;
+    gap: 20px;
+  }
+
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+  }
+
+  .services-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.4);
+    gap: 16px;
+  }
+
+  .no-results i {
+    font-size: 3rem;
+    opacity: 0.5;
+  }
+
+  .no-results p {
+    font-size: 1.1rem;
+  }
+
   .services-container {
     display: grid;
     grid-template-columns: repeat(var(--columns, 3), 1fr);
@@ -210,6 +304,16 @@
   @media (max-width: 1200px) {
     .services-container {
       grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .main-content {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
     }
   }
 
