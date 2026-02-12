@@ -2,6 +2,7 @@
 
 server:
   port: "8090"
+  mode: debug # debug 或 release
 
 # Basic 认证配置
 auth:

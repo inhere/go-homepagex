@@ -2,12 +2,22 @@
   export let item = { name: '', url: '', logo: '', subtitle: '', tag: '' };
   export let style = 'cards';
 
+  let showUrl = false;
+
   function handleClick() {
     if (item.target === '_blank') {
       window.open(item.url, '_blank');
     } else {
       window.location.href = item.url;
     }
+  }
+
+  function toggleUrl() {
+    showUrl = !showUrl;
+  }
+
+  function copyUrl() {
+    navigator.clipboard.writeText(item.url);
   }
 
   function handleKeydown(event) {
@@ -19,8 +29,8 @@
 </script>
 
 {#if style === 'cards'}
-  <div class="service-item card" on:click={handleClick} on:keydown={handleKeydown} role="button" tabindex="0">
-    <div class="item-logo">
+  <div class="service-item card">
+    <button class="item-logo" on:click={handleClick} on:keydown={handleKeydown}>
       {#if item.logo}
         <img src={item.logo} alt={item.name} />
       {:else}
@@ -28,10 +38,12 @@
           <i class="fas fa-link"></i>
         </div>
       {/if}
-    </div>
+    </button>
     <div class="item-content">
       <div class="item-header">
-        <h3>{item.name}</h3>
+        <button class="item-title" on:click={handleClick} on:keydown={handleKeydown}>
+          {item.name}
+        </button>
         {#if item.tag}
           <span class="tag">{item.tag}</span>
         {/if}
@@ -39,11 +51,24 @@
       {#if item.subtitle}
         <p class="subtitle">{item.subtitle}</p>
       {/if}
+      <div class="url-section">
+        <button class="url-toggle" on:click={toggleUrl}>
+          <i class="fas fa-chevron-{showUrl ? 'up' : 'down'}"></i>
+        </button>
+        {#if showUrl}
+          <div class="url-display">
+            <span class="url-text">{item.url}</span>
+            <button class="copy-btn" on:click={copyUrl} title="复制链接">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 {:else}
-  <div class="service-item list" on:click={handleClick} on:keydown={handleKeydown} role="button" tabindex="0">
-    <div class="item-logo">
+  <div class="service-item list">
+    <button class="item-logo" on:click={handleClick} on:keydown={handleKeydown}>
       {#if item.logo}
         <img src={item.logo} alt={item.name} />
       {:else}
@@ -51,11 +76,26 @@
           <i class="fas fa-link"></i>
         </div>
       {/if}
-    </div>
+    </button>
     <div class="item-content">
-      <h3>{item.name}</h3>
+      <button class="item-title" on:click={handleClick} on:keydown={handleKeydown}>
+        {item.name}
+      </button>
       {#if item.subtitle}
         <p class="item-subtitle">{item.subtitle}</p>
+      {/if}
+    </div>
+    <div class="list-actions">
+      <button class="url-toggle" on:click={toggleUrl} title="显示链接">
+        <i class="fas fa-link"></i>
+      </button>
+      {#if showUrl}
+        <div class="url-popover">
+          <span class="url-text">{item.url}</span>
+          <button class="copy-btn" on:click={copyUrl} title="复制链接">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
       {/if}
     </div>
     {#if item.tag}
@@ -66,14 +106,13 @@
 
 <style>
   .service-item {
-    cursor: pointer;
     transition: all 0.3s ease;
   }
 
   /* Card style */
   .service-item.card {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     padding: 16px;
     background: rgba(255, 255, 255, 0.05);
@@ -84,7 +123,6 @@
   .service-item.card:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--theme-primary-rgba);
-    transform: translateX(4px);
   }
 
   /* List style */
@@ -105,6 +143,21 @@
 
   .item-logo {
     flex-shrink: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .item-logo:hover {
+    transform: scale(1.05);
+  }
+
+  .item-logo:focus {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: 2px;
+    border-radius: 8px;
   }
 
   .item-logo img {
@@ -139,6 +192,9 @@
   .item-content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .item-header {
@@ -148,29 +204,129 @@
     flex-wrap: wrap;
   }
 
-  .item-content h3 {
+  .item-title {
+    background: transparent;
+    border: none;
+    padding: 0;
     font-size: 1.1rem;
     font-weight: 600;
     color: #ffffff;
-    margin: 0;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.2s;
   }
 
-  .list .item-content h3 {
+  .item-title:hover {
+    color: var(--theme-primary);
+  }
+
+  .item-title:focus {
+    outline: 2px solid var(--theme-primary);
+    outline-offset: 2px;
+  }
+
+  .list .item-title {
     font-size: 1rem;
   }
 
-  .item-subtitle {
+  .subtitle {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.6);
-    margin: 4px 0 0 0;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .list .item-subtitle {
+  .item-subtitle {
     font-size: 0.8rem;
-    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .url-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .url-toggle {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.75rem;
+  }
+
+  .url-toggle:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .url-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+
+  .url-text {
+    flex: 1;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+  }
+
+  .copy-btn:hover {
+    color: var(--theme-primary);
+    background: var(--theme-primary-rgba);
+  }
+
+  .list-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .url-popover {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(30, 30, 50, 0.95);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+    min-width: 200px;
+    backdrop-filter: blur(10px);
   }
 
   .tag {
@@ -186,12 +342,13 @@
   }
 
   .list .tag {
-    margin-left: auto;
+    flex-shrink: 0;
   }
 
-  /* Focus styles for accessibility */
-  .service-item:focus {
-    outline: 2px solid var(--theme-primary);
-    outline-offset: 2px;
+  @media (max-width: 768px) {
+    .url-popover {
+      min-width: 160px;
+      right: -50%;
+    }
   }
 </style>
