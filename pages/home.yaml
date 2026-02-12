@@ -44,14 +44,14 @@ services:
       - name: "GitLab"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gitlab.png"
         subtitle: "Git repository"
-        tags: ["dev"]
+        tags: ["dev", "git"]
         url: "https://gitlab.example.com"
         target: "_blank"
 
       - name: "Jenkins"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jenkins.png"
         subtitle: "CI/CD platform"
-        tags: ["dev"]
+        tags: ["dev", "ci"]
         url: "https://jenkins.example.com"
         target: "_blank"
 
@@ -68,14 +68,14 @@ services:
       - name: "Proxmox"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png"
         subtitle: "Virtualization"
-        tags: ["system"]
+        tags: ["system", "pve"]
         url: "https://proxmox.example.com"
         target: "_blank"
 
       - name: "TrueNAS"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/truenas.png"
         subtitle: "NAS storage"
-        tags: ["system"]
+        tags: ["system", "nas"]
         url: "https://truenas.example.com"
         target: "_blank"
 

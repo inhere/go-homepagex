@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gookit/goutil/strutil"
 )
 
 // HealthHandler 健康检查
@@ -22,15 +24,17 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 从 URL 路径获取路由
 	path := strings.TrimPrefix(r.URL.Path, "/api/page")
+	// 检查 refresh 参数
+	refresh := strutil.SafeBool(r.URL.Query().Get("refresh"))
 
-	pageConfig, err := PageDataMgr.GetPageConfig(path)
+	pageConfig, err := PageDataMgr.GetPageConfig(path, refresh)
 	if err != nil {
 		log.Printf("Error loading page data for %s: %v", r.URL.Path, err)
 		s.sendError(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	log.Printf("Request API GET %s, Pagefile: %s", r.URL.Path, pageConfig.Pagefile)
+	log.Printf("Request API GET %s, Pagefile: %s", r.RequestURI, pageConfig.Pagefile)
 	s.sendJSON(w, pageConfig)
 }
 

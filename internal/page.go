@@ -71,13 +71,18 @@ type PageDataManager struct {
 var PageDataMgr *PageDataManager
 
 // GetPageConfig 获取页面配置数据
-func (m *PageDataManager) GetPageConfig(name string) (*PageConfig, error) {
+func (m *PageDataManager) GetPageConfig(name string, refresh bool) (*PageConfig, error) {
 	if m.cacheMap == nil {
 		m.cacheMap = make(map[string]*PageConfig)
 	}
 
-	// 非调试模式下，从缓存中获取
-	if page, ok := m.cacheMap[name]; ok && !m.Debug {
+	// feat: refresh=true 时跳过缓存，重新加载
+	if !refresh {
+		refresh = m.Debug
+	}
+
+	// 从缓存中获取
+	if page, ok := m.cacheMap[name]; ok && !refresh {
 		return page, nil
 	}
 
@@ -85,7 +90,6 @@ func (m *PageDataManager) GetPageConfig(name string) (*PageConfig, error) {
 	if err == nil {
 		m.cacheMap[name] = page
 	}
-
 	return page, err
 }
 

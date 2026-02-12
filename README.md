@@ -7,9 +7,14 @@
 - **YAML 配置**: 类似 Homer 的 YAML 格式定义页面链接
 - **多页面支持**: `/` 对应 `home.yaml`，`/another` 对应 `another.yaml`
 - **视图切换**: 支持卡片视图和列表视图切换
+- **内置过滤**: 支持按标题，描述，标签过滤服务项
 - **Basic 认证**: 可配置的用户名/密码验证
 - **FontAwesome 图标**: 支持 FontAwesome 图标
 - **响应式设计**: 适配桌面和移动设备
+
+## 效果预览
+
+![Preview](deploy/preview.png)
 
 ## 快速开始
 

@@ -87,6 +87,20 @@
     return path === '/' ? '/' : path;
   }
 
+  // 检查并处理 URL 中的 refresh 参数
+  function getRefreshParam() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refresh = urlParams.get('refresh');
+    if (refresh === 'true') {
+      // 移除 URL 中的 refresh 参数
+      urlParams.delete('refresh');
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+      history.replaceState({}, '', newUrl);
+      return true;
+    }
+    return false;
+  }
+
   // 加载页面配置
   async function loadConfig(route) {
     const currentRoutePath = route || getRoute();
@@ -95,10 +109,15 @@
     searchQuery = '';
     selectedTag = '';
 
+    const shouldRefresh = getRefreshParam();
+    const apiPath = shouldRefresh
+      ? `/api/page${currentRoutePath === '/' ? '' : currentRoutePath}?refresh=true`
+      : `/api/page${currentRoutePath === '/' ? '' : currentRoutePath}`;
+
     try {
       currentRoute.set(currentRoutePath);
 
-      const response = await fetch(`/api/page${currentRoutePath === '/' ? '' : currentRoutePath}`);
+      const response = await fetch(apiPath);
       const result = await response.json();
 
       if (!result.success) {
