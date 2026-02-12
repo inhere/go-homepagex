@@ -19,15 +19,27 @@
     --theme-secondary-rgba: ${themeColors.secondary}33;
   `;
 
+  function matchesAllKeywords(text, keywords) {
+    if (!keywords.length) return true;
+    const lowerText = text.toLowerCase();
+    return keywords.every(keyword => lowerText.includes(keyword));
+  }
+
   $: {
-    if (searchQuery.trim()) {
+    searchQuery = searchQuery.trim().toLowerCase();
+    if (searchQuery.length > 1) {
+      const keywords = searchQuery.split(/\s+/).filter(k => k.length > 0);
       filteredServices = ($pageConfig.services || []).map(service => ({
         ...service,
-        items: (service.items || []).filter(item =>
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.tag?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        items: (service.items || []).filter(item => {
+          const searchFields = [
+            item.name,
+            item.subtitle,
+            ...(item.tags || []),
+            service.name
+          ].filter(Boolean).join(' ');
+          return matchesAllKeywords(searchFields, keywords);
+        })
       })).filter(service => service.items.length > 0);
     } else {
       filteredServices = $pageConfig.services || [];
@@ -118,10 +130,7 @@
         <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} onNavigate={handleNavigate} />
       {/if}
 
-      <Toolbar
-        services={$pageConfig.services || []}
-        onSearch={handleSearch}
-      />
+      <Toolbar onSearch={handleSearch} />
 
       <div class="services-container" style="--columns: {$pageConfig.columns || '3'}">
         {#each filteredServices as service}

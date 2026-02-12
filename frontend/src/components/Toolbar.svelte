@@ -1,53 +1,13 @@
 <script>
   import { viewStyle, themes, currentTheme, getThemeColors } from '../stores.js';
 
-  export let services = [];
   export let onSearch = () => {};
 
   let searchQuery = '';
-  let showResults = false;
   let showThemeDropdown = false;
-  let filteredItems = [];
 
   $: themeColors = getThemeColors($currentTheme);
   $: currentThemeName = themes.find(t => t.id === $currentTheme)?.name || '默认主题';
-
-  function matchesAllKeywords(text, keywords) {
-    if (!keywords.length) return true;
-    const lowerText = text.toLowerCase();
-    return keywords.every(keyword => lowerText.includes(keyword));
-  }
-
-  function searchItems(query) {
-    if (!query.trim()) {
-      return [];
-    }
-
-    // feat: 支持按空格分割多个关键词，使用 AND 关系搜索
-    const keywords = query.trim().split(/\s+/).filter(k => k.length > 0);
-
-    return services.flatMap(service =>
-      service.items.map(item => ({
-        ...item,
-        serviceName: service.name,
-        serviceIcon: service.icon
-      }))
-    ).filter(item => {
-      const searchFields = [
-        item.name,
-        item.subtitle,
-        ...(item.tags || []),
-        item.serviceName
-      ].filter(Boolean).join(' ');
-
-      return matchesAllKeywords(searchFields, keywords);
-    });
-  }
-
-  $: {
-    filteredItems = searchItems(searchQuery);
-    showResults = searchQuery.trim() && filteredItems.length > 0;
-  }
 
   function handleSearch(event) {
     searchQuery = event.target.value;
@@ -56,7 +16,6 @@
 
   function clearSearch() {
     searchQuery = '';
-    showResults = false;
     onSearch('');
   }
 
@@ -69,20 +28,8 @@
     showThemeDropdown = false;
   }
 
-  function navigateTo(url, target) {
-    if (target === '_blank') {
-      window.open(url, '_blank');
-    } else {
-      window.location.href = url;
-    }
-    showResults = false;
-    searchQuery = '';
-    onSearch('');
-  }
-
   function handleKeydown(event) {
     if (event.key === 'Escape') {
-      showResults = false;
       showThemeDropdown = false;
       document.querySelector('.search-input').blur();
     }
@@ -98,50 +45,19 @@
 <svelte:window on:keydown={handleKeydown} on:click={handleClickOutside} />
 
 <div class="toolbar">
-  <div class="search-container">
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search services..."
-        value={searchQuery}
-        on:input={handleSearch}
-        on:focus={() => { if (searchQuery) showResults = true; }}
-      />
-      {#if searchQuery}
-        <button class="clear-btn" on:click={clearSearch}>
-          <i class="fas fa-times"></i>
-        </button>
-      {/if}
-    </div>
-
-    {#if showResults && filteredItems.length > 0}
-      <div class="search-results">
-        {#each filteredItems as item}
-          <button
-            class="search-result-item"
-            on:click={() => navigateTo(item.url, item.target)}
-          >
-            <div class="result-icon">
-              {#if item.logo}
-                <img src={item.logo} alt={item.name} />
-              {:else}
-                <i class="fas fa-link"></i>
-              {/if}
-            </div>
-            <div class="result-content">
-              <div class="result-name">{item.name}</div>
-              <div class="result-subtitle">{item.subtitle || item.serviceName}</div>
-            </div>
-            {#if item.tags && item.tags.length > 0}
-              {#each item.tags as tag}
-                <span class="result-tag">{tag}</span>
-              {/each}
-            {/if}
-          </button>
-        {/each}
-      </div>
+  <div class="search-box">
+    <i class="fas fa-search"></i>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="搜索服务..."
+      value={searchQuery}
+      on:input={handleSearch}
+    />
+    {#if searchQuery}
+      <button class="clear-btn" on:click={clearSearch} title="清除">
+        <i class="fas fa-times"></i>
+      </button>
     {/if}
   </div>
 
@@ -182,9 +98,9 @@
       {/if}
     </div>
 
-    <button class="style-toggle" on:click={toggleStyle}>
+    <button class="style-toggle" on:click={toggleStyle} title="切换视图">
       <i class="fas {$viewStyle === 'cards' ? 'fa-list' : 'fa-th-large'}"></i>
-      <span>{$viewStyle === 'cards' ? 'List View' : 'Card View'}</span>
+      <span>{$viewStyle === 'cards' ? '列表' : '卡片'}</span>
     </button>
   </div>
 </div>
@@ -197,13 +113,9 @@
     margin-bottom: 20px;
   }
 
-  .search-container {
+  .search-box {
     flex: 1;
     max-width: 400px;
-    position: relative;
-  }
-
-  .search-box {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -251,91 +163,6 @@
 
   .clear-btn:hover {
     color: #e4e4e4;
-  }
-
-  .search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 8px;
-    background: rgba(30, 30, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    overflow: hidden;
-    z-index: 1000;
-    max-height: 400px;
-    overflow-y: auto;
-    backdrop-filter: blur(10px);
-  }
-
-  .search-result-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.2s;
-  }
-
-  .search-result-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .result-icon {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--theme-primary-rgba);
-    border-radius: 8px;
-  }
-
-  .result-icon img {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    border-radius: 4px;
-  }
-
-  .result-icon i {
-    color: var(--theme-primary);
-    font-size: 1rem;
-  }
-
-  .result-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .result-name {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #ffffff;
-  }
-
-  .result-subtitle {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .result-tag {
-    padding: 2px 8px;
-    background: var(--theme-primary-rgba);
-    color: var(--theme-primary);
-    font-size: 0.7rem;
-    font-weight: 500;
-    border-radius: 4px;
-    text-transform: uppercase;
   }
 
   .toolbar-actions {
@@ -396,7 +223,7 @@
     border-radius: 12px;
     overflow: hidden;
     z-index: 1000;
-    min-width: 180px;
+    min-width: 160px;
     backdrop-filter: blur(10px);
   }
 
@@ -405,7 +232,7 @@
     align-items: center;
     gap: 12px;
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -424,8 +251,8 @@
   }
 
   .theme-preview {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
     flex-shrink: 0;
   }
@@ -440,7 +267,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 10px 16px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
@@ -448,7 +275,6 @@
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
-    white-space: nowrap;
   }
 
   .style-toggle:hover {
@@ -461,7 +287,7 @@
       flex-direction: column;
     }
 
-    .search-container {
+    .search-box {
       max-width: 100%;
       width: 100%;
     }
@@ -476,7 +302,7 @@
     }
 
     .theme-btn {
-      padding: 10px 14px;
+      padding: 10px 12px;
     }
 
     .style-toggle span {
@@ -484,12 +310,12 @@
     }
 
     .style-toggle {
-      padding: 10px 14px;
+      padding: 10px 12px;
     }
 
     .theme-dropdown {
       right: 0;
-      min-width: 160px;
+      min-width: 140px;
     }
   }
 </style>
