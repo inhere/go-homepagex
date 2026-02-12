@@ -296,14 +296,14 @@
 
   .services-container {
     display: grid;
-    grid-template-columns: repeat(var(--columns, 3), 1fr);
+    grid-template-columns: repeat(var(--columns, 3), minmax(280px, 1fr));
     gap: 24px;
   }
 
   /* Responsive */
-  @media (max-width: 1200px) {
+  @media (max-width: 1400px) {
     .services-container {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
     }
   }
 
@@ -314,6 +314,10 @@
 
     .sidebar {
       width: 100%;
+    }
+
+    .services-container {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
   }
 
