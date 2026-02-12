@@ -14,16 +14,16 @@
 
   $: {
     if (searchQuery.trim()) {
-      filteredItems = services.flatMap(service => 
+      filteredItems = services.flatMap(service =>
         service.items.map(item => ({
           ...item,
           serviceName: service.name,
           serviceIcon: service.icon
         }))
-      ).filter(item => 
+      ).filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+        item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       showResults = filteredItems.length > 0;
     } else {
@@ -102,7 +102,7 @@
     {#if showResults && filteredItems.length > 0}
       <div class="search-results">
         {#each filteredItems as item}
-          <button 
+          <button
             class="search-result-item"
             on:click={() => navigateTo(item.url, item.target)}
           >
@@ -117,8 +117,10 @@
               <div class="result-name">{item.name}</div>
               <div class="result-subtitle">{item.subtitle || item.serviceName}</div>
             </div>
-            {#if item.tag}
-              <span class="result-tag">{item.tag}</span>
+            {#if item.tags && item.tags.length > 0}
+              {#each item.tags as tag}
+                <span class="result-tag">{tag}</span>
+              {/each}
             {/if}
           </button>
         {/each}
@@ -128,11 +130,11 @@
 
   <div class="toolbar-actions">
     <div class="theme-selector">
-      <button 
+      <button
         class="theme-btn"
         on:click|stopPropagation={() => showThemeDropdown = !showThemeDropdown}
       >
-        <div 
+        <div
           class="theme-indicator"
           style="background: linear-gradient(135deg, {themeColors.primary}, {themeColors.secondary})"
         ></div>
@@ -144,12 +146,12 @@
         <div class="theme-dropdown">
           {#each themes as theme}
             {@const colors = getThemeColors(theme.id)}
-            <button 
+            <button
               class="theme-option"
               class:active={$currentTheme === theme.id}
               on:click={() => selectTheme(theme.id)}
             >
-              <div 
+              <div
                 class="theme-preview"
                 style="background: linear-gradient(135deg, {colors.primary}, {colors.secondary})"
               ></div>

@@ -1,4 +1,4 @@
-# Home Dashboard
+# HomePageX
 
 一个非常轻量的类似 Homer 的导航主页，使用 Go + Svelte 实现。
 
@@ -84,7 +84,7 @@ services:
       - name: "Plex"
         logo: "https://example.com/plex.png"
         subtitle: "Media server"
-        tag: "app"
+        tags: ["app"]
         url: "https://plex.example.com"
         target: "_blank"
 ```

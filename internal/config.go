@@ -39,7 +39,7 @@ type Config struct {
 func newDefaultConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Port: "8080",
+			Port: "8090",
 		},
 		Auth: AuthConfig{
 			Enabled: false,
@@ -58,7 +58,7 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	if err := yaml.Unmarshal(data, &config); err != nil {
+	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 

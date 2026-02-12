@@ -1,5 +1,5 @@
 <script>
-  export let item = { name: '', url: '', logo: '', subtitle: '', tag: '' };
+  export let item = { name: '', url: '', logo: '', subtitle: '', tags: [] };
   export let style = 'cards';
 
   let showUrl = false;
@@ -44,8 +44,10 @@
         <button class="item-title" on:click={handleClick} on:keydown={handleKeydown}>
           {item.name}
         </button>
-        {#if item.tag}
-          <span class="tag">{item.tag}</span>
+        {#if item.tags && item.tags.length > 0}
+          {#each item.tags as tag}
+            <span class="tag">{tag}</span>
+          {/each}
         {/if}
       </div>
       {#if item.subtitle}

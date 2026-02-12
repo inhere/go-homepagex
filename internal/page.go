@@ -47,7 +47,7 @@ type Item struct {
 	Name     string            `yaml:"name" json:"name"`
 	Logo     string            `yaml:"logo" json:"logo"`
 	Subtitle string            `yaml:"subtitle" json:"subtitle"`
-	Tag      string            `yaml:"tag" json:"tag"`
+	Tags     []string          `yaml:"tags" json:"tags"`
 	Keywords string            `yaml:"keywords" json:"keywords"`
 	URL      string            `yaml:"url" json:"url"`
 	Target   string            `yaml:"target" json:"target"`

@@ -30,7 +30,7 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Request GET %s, Pagefile: %s", r.URL.Path, pageConfig.Pagefile)
+	log.Printf("Request API GET %s, Pagefile: %s", r.URL.Path, pageConfig.Pagefile)
 	s.sendJSON(w, pageConfig)
 }
 
@@ -52,8 +52,16 @@ func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 		if info != nil && info.IsDir() {
 			fullPath = filepath.Join(fullPath, "index.html")
 		} else {
-			// 返回前端应用的 index.html（支持前端路由）
-			fullPath = filepath.Join(s.config.FrontendDir, "index.html")
+			extName := filepath.Ext(path)
+			if extName == "" {
+				// 返回前端应用的 index.html（支持前端路由）
+				fullPath = filepath.Join(s.config.FrontendDir, "index.html")
+			} else {
+				log.Printf("NOTICE File not found: %s", fullPath)
+				// 否则返回 404
+				s.sendError(w, "File not found", http.StatusNotFound)
+				return
+			}
 		}
 	}
 

@@ -14,28 +14,28 @@ services:
       - name: "VS Code"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/vscode.png"
         subtitle: "Code editor"
-        tag: "editor"
+        tags: ["editor"]
         url: "https://code.visualstudio.com"
         target: "_blank"
-      
+
       - name: "GitHub"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png"
         subtitle: "Code hosting"
-        tag: "git"
+        tags: ["git"]
         url: "https://github.com"
         target: "_blank"
-      
+
       - name: "GitLab"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gitlab.png"
         subtitle: "DevOps platform"
-        tag: "git"
+        tags: ["git"]
         url: "https://gitlab.com"
         target: "_blank"
-      
+
       - name: "Docker Hub"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/docker.png"
         subtitle: "Container registry"
-        tag: "container"
+        tags: ["container"]
         url: "https://hub.docker.com"
         target: "_blank"
 
@@ -45,28 +45,28 @@ services:
       - name: "AWS"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/aws.png"
         subtitle: "Amazon Web Services"
-        tag: "cloud"
+        tags: ["cloud"]
         url: "https://aws.amazon.com"
         target: "_blank"
-      
+
       - name: "Google Cloud"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gcp.png"
         subtitle: "GCP"
-        tag: "cloud"
+        tags: ["cloud"]
         url: "https://cloud.google.com"
         target: "_blank"
-      
+
       - name: "Azure"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/azure.png"
         subtitle: "Microsoft Azure"
-        tag: "cloud"
+        tags: ["cloud"]
         url: "https://azure.microsoft.com"
         target: "_blank"
-      
+
       - name: "Vercel"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/vercel.png"
         subtitle: "Deployment platform"
-        tag: "deploy"
+        tags: ["deploy"]
         url: "https://vercel.com"
         target: "_blank"
 
@@ -76,20 +76,20 @@ services:
       - name: "Grafana"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/grafana.png"
         subtitle: "Metrics dashboard"
-        tag: "monitor"
+        tags: ["monitor"]
         url: "https://grafana.com"
         target: "_blank"
-      
+
       - name: "Prometheus"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/prometheus.png"
         subtitle: "Monitoring"
-        tag: "monitor"
+        tags: ["monitor"]
         url: "https://prometheus.io"
         target: "_blank"
-      
+
       - name: "Uptime Kuma"
         logo: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png"
         subtitle: "Uptime monitor"
-        tag: "monitor"
+        tags: ["monitor"]
         url: "https://uptime.kuma.pet"
         target: "_blank"
