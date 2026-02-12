@@ -2,18 +2,12 @@
   export let item = { name: '', url: '', logo: '', subtitle: '', tags: [] };
   export let style = 'cards';
 
-  let showUrl = false;
-
   function handleClick() {
     if (item.target === '_blank') {
       window.open(item.url, '_blank');
     } else {
       window.location.href = item.url;
     }
-  }
-
-  function toggleUrl() {
-    showUrl = !showUrl;
   }
 
   function copyUrl() {
@@ -54,17 +48,12 @@
         <p class="subtitle">{item.subtitle}</p>
       {/if}
       <div class="url-section">
-        <button class="url-toggle" on:click={toggleUrl}>
-          <i class="fas fa-chevron-{showUrl ? 'up' : 'down'}"></i>
-        </button>
-        {#if showUrl}
           <div class="url-display">
             <span class="url-text">{item.url}</span>
             <button class="copy-btn" on:click={copyUrl} title="复制链接">
               <i class="fas fa-copy"></i>
             </button>
           </div>
-        {/if}
       </div>
     </div>
   </div>
@@ -88,20 +77,17 @@
       {/if}
     </div>
     <div class="list-actions">
-      <button class="url-toggle" on:click={toggleUrl} title="显示链接">
-        <i class="fas fa-link"></i>
-      </button>
-      {#if showUrl}
         <div class="url-popover">
           <span class="url-text">{item.url}</span>
           <button class="copy-btn" on:click={copyUrl} title="复制链接">
             <i class="fas fa-copy"></i>
           </button>
         </div>
-      {/if}
     </div>
-    {#if item.tag}
-      <span class="tag">{item.tag}</span>
+    {#if item.tags && item.tags.length > 0}
+      {#each item.tags as tag}
+        <span class="tag">{tag}</span>
+      {/each}
     {/if}
   </div>
 {/if}
@@ -256,22 +242,6 @@
     margin-top: 4px;
   }
 
-  .url-toggle {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    font-size: 0.75rem;
-  }
-
-  .url-toggle:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
   .url-display {
     display: flex;
     align-items: center;
@@ -316,9 +286,9 @@
 
   .url-popover {
     position: absolute;
-    top: 100%;
+    /* top: 100%; */
     right: 0;
-    margin-top: 8px;
+    /* margin-top: 8px; */
     display: flex;
     align-items: center;
     gap: 8px;

@@ -12,24 +12,41 @@
   $: themeColors = getThemeColors($currentTheme);
   $: currentThemeName = themes.find(t => t.id === $currentTheme)?.name || '默认主题';
 
-  $: {
-    if (searchQuery.trim()) {
-      filteredItems = services.flatMap(service =>
-        service.items.map(item => ({
-          ...item,
-          serviceName: service.name,
-          serviceIcon: service.icon
-        }))
-      ).filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      showResults = filteredItems.length > 0;
-    } else {
-      filteredItems = [];
-      showResults = false;
+  function matchesAllKeywords(text, keywords) {
+    if (!keywords.length) return true;
+    const lowerText = text.toLowerCase();
+    return keywords.every(keyword => lowerText.includes(keyword));
+  }
+
+  function searchItems(query) {
+    if (!query.trim()) {
+      return [];
     }
+
+    // feat: 支持按空格分割多个关键词，使用 AND 关系搜索
+    const keywords = query.trim().split(/\s+/).filter(k => k.length > 0);
+
+    return services.flatMap(service =>
+      service.items.map(item => ({
+        ...item,
+        serviceName: service.name,
+        serviceIcon: service.icon
+      }))
+    ).filter(item => {
+      const searchFields = [
+        item.name,
+        item.subtitle,
+        ...(item.tags || []),
+        item.serviceName
+      ].filter(Boolean).join(' ');
+
+      return matchesAllKeywords(searchFields, keywords);
+    });
+  }
+
+  $: {
+    filteredItems = searchItems(searchQuery);
+    showResults = searchQuery.trim() && filteredItems.length > 0;
   }
 
   function handleSearch(event) {
