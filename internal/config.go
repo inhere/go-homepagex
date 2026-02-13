@@ -30,10 +30,12 @@ type NavItem struct {
 // Config 应用主配置
 type Config struct {
 	Server      ServerConfig `yaml:"server"`
-	Auth        AuthConfig   `yaml:"auth"`
 	PagesDir    string       `yaml:"pages_dir"`
 	FrontendDir string       `yaml:"frontend_dir"`
-	Navs        []NavItem    `yaml:"navs" json:"navs"`
+	// 图标 CDN 配置 see https://dashboardicons.com/ 搜索
+	IconsCDN map[string]string `yaml:"icons_cdn" json:"icons_cdn"`
+	Auth     AuthConfig        `yaml:"auth"`
+	Navs     []NavItem         `yaml:"navs" json:"navs"`
 }
 
 func newDefaultConfig() *Config {

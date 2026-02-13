@@ -10,9 +10,72 @@ import (
 	"github.com/gookit/goutil/strutil"
 )
 
+const (
+	// IconLocalPrefix 图标缓存路径前缀
+	IconLocalPrefix = "icons-local/"
+)
+
 // HealthHandler 健康检查
 func (s *Server) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	s.sendJSON(w, map[string]string{"status": "ok"})
+}
+
+// GetIconLocalHandler 图标缓存处理
+// 当 icon 路径以 icons-local/ 开头时，从本地缓存读取，若不存在则下载并缓存
+func (s *Server) GetIconLocalHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 获取图标路径 (去掉 icons-local/ 前缀)
+	iconPath := strings.TrimPrefix(r.URL.Path, "/icons-local/")
+	if iconPath == "" {
+		s.sendError(w, "Icon path required", http.StatusBadRequest)
+		return
+	}
+
+	// 构建本地缓存路径
+	cacheDir := filepath.Join(s.config.FrontendDir, IconLocalPrefix)
+	localPath := filepath.Join(cacheDir, iconPath)
+
+	// 检查本地缓存是否存在
+	if _, err := os.Stat(localPath); os.IsNotExist(err) {
+		// 本地不存在，尝试下载
+		iconCdnKey := strutil.BeforeFirst(iconPath, "/")
+		baseRemoteUrl, ok := s.config.IconsCDN[iconCdnKey]
+		if !ok {
+			log.Printf("Icon CDN key %q not found in config.icons_cdn", iconCdnKey)
+			s.sendError(w, "Icon not found", http.StatusNotFound)
+			return
+		}
+
+		remoteURL := baseRemoteUrl + iconPath
+		log.Printf("Icon cache miss: %s, downloading from: %s", iconPath, remoteURL)
+
+		// 下载文件
+		if err := downloadIconFile(remoteURL, localPath); err != nil {
+			log.Printf("Failed to download icon: %v", err)
+			s.sendError(w, "Cache icon error", http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("Icon cached: %s -> %s", iconPath, localPath)
+	}
+
+	// 读取并返回本地文件
+	data, err := os.ReadFile(localPath)
+	if err != nil {
+		log.Printf("Failed to read cached icon: %v", err)
+		s.sendError(w, "Icon read error", http.StatusInternalServerError)
+		return
+	}
+
+	// 设置 Content-Type
+	contentType := getContentType(localPath)
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "public, max-age=86400") // 缓存 24 小时
+	w.Write(data)
 }
 
 // GetPageConfigHandler 获取页面配置数据
@@ -76,31 +139,4 @@ func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", contentType)
 
 	http.ServeFile(w, r, fullPath)
-}
-
-// getContentType 根据文件扩展名获取 Content-Type
-func getContentType(path string) string {
-	ext := strings.ToLower(filepath.Ext(path))
-	switch ext {
-	case ".html":
-		return "text/html"
-	case ".js":
-		return "application/javascript"
-	case ".css":
-		return "text/css"
-	case ".json":
-		return "application/json"
-	case ".png":
-		return "image/png"
-	case ".jpg", ".jpeg":
-		return "image/jpeg"
-	case ".gif":
-		return "image/gif"
-	case ".svg":
-		return "image/svg+xml"
-	case ".ico":
-		return "image/x-icon"
-	default:
-		return "application/octet-stream"
-	}
 }

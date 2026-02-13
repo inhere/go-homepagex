@@ -64,6 +64,6 @@ func (s *Server) BasicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 // requestAuth 请求认证
 func (s *Server) requestAuth(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="Home Dashboard"`)
+	w.Header().Set("WWW-Authenticate", `Basic realm="HomePagex"`)
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
 }
