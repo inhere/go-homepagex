@@ -17,7 +17,7 @@ pages_dir: "./pages"
 frontend_dir: "./frontend/build"
 
 # 默认导航配置
-navs:
+page_navs:
   - name: "Home"
     icon: "fas fa-home"
     url: "/"

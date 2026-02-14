@@ -2,7 +2,6 @@
 # 参考: https://github.com/bastienwirtz/homer
 title: "Home Dashboard"
 subtitle: "Welcome to your dashboard"
-logo: "logo.png"
 
 theme: "default"
 color: "blue"

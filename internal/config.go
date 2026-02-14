@@ -27,6 +27,19 @@ type NavItem struct {
 	URL  string `yaml:"url" json:"url"`
 }
 
+// PageDefaults 页面默认配置
+type PageDefaults struct {
+	Title        string       `yaml:"title" json:"title"`
+	Subtitle     string       `yaml:"subtitle" json:"subtitle"`
+	Logo         string       `yaml:"logo" json:"logo"`
+	Header       string       `yaml:"header" json:"header"`
+	Footer       string       `yaml:"footer" json:"footer"`
+	Theme        string       `yaml:"theme" json:"theme"`
+	Color        string       `yaml:"color" json:"color"`
+	Style        string       `yaml:"style" json:"style"`
+	Columns      string       `yaml:"columns" json:"columns"`
+}
+
 // Config 应用主配置
 type Config struct {
 	Server      ServerConfig `yaml:"server"`

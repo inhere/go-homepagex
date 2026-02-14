@@ -12,7 +12,8 @@ import (
 
 const (
 	// IconLocalPrefix 图标缓存路径前缀
-	IconLocalPrefix = "icons-local/"
+	IconLocalPrefix = "icons-local"
+	PageApiPrefix = "/api/page"
 )
 
 // HealthHandler 健康检查

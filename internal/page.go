@@ -12,15 +12,7 @@ import (
 
 // PageConfig 页面配置（类似 Homer 的格式）
 type PageConfig struct {
-	Title        string       `yaml:"title" json:"title"`
-	Subtitle     string       `yaml:"subtitle" json:"subtitle"`
-	Logo         string       `yaml:"logo" json:"logo"`
-	Header       string       `yaml:"header" json:"header"`
-	Footer       string       `yaml:"footer" json:"footer"`
-	Theme        string       `yaml:"theme" json:"theme"`
-	Color        string       `yaml:"color" json:"color"`
-	Style        string       `yaml:"style" json:"style"`
-	Columns      string       `yaml:"columns" json:"columns"`
+	PageDefaults `yaml:",inline"`
 	Connectivity Connectivity `yaml:"connectivity" json:"connectivity"`
 	Services     []Service    `yaml:"services" json:"services"`
 	Navs         []NavItem    `yaml:"navs" json:"navs"`
@@ -60,9 +52,9 @@ type Item struct {
 type PageDataManager struct {
 	Debug   bool
 	PageDir string
+	Defaults PageDefaults
 	// 默认导航项
 	Navs []NavItem
-
 	// 页面配置缓存 key is page name TODO 支持缓存过期
 	cacheMap map[string]*PageConfig
 }
@@ -137,8 +129,10 @@ func (m *PageDataManager) LoadPageConfig(name string) (*PageConfig, error) {
 		return nil, fmt.Errorf("failed to read page config: %w", err)
 	}
 
-	var page PageConfig
-	if err := yaml.Unmarshal(data, &page); err != nil {
+	page := &PageConfig{
+		PageDefaults: m.Defaults,
+	}
+	if err := yaml.Unmarshal(data, page); err != nil {
 		return nil, fmt.Errorf("failed to parse page config: %w", err)
 	}
 
@@ -157,5 +151,5 @@ func (m *PageDataManager) LoadPageConfig(name string) (*PageConfig, error) {
 	if len(page.Navs) == 0 {
 		page.Navs = m.Navs
 	}
-	return &page, nil
+	return page, nil
 }
