@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"os"
 	"strings"
@@ -324,6 +325,42 @@ func (c *Config) pathMatch(pathWithPerm string, reqPath string) (bool, string) {
 
 	// 精确匹配或子路径匹配（/path → /path 和 /path/...）
 	return reqPath == pattern || strings.HasPrefix(reqPath, pattern+"/"), perm
+}
+
+// CheckCredentials 验证用户名和密码是否匹配任意已配置用户
+func (c *Config) CheckCredentials(username, password string) bool {
+	auth, exists := c.parsedAuths[username]
+	if !exists || auth.Username == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(password), []byte(auth.Password)) == 1
+}
+
+// FilterNavsByPermission 过滤出当前用户有权访问的导航项
+// - 公开可访问（无需认证）的路径对所有人显示
+// - 需要认证的路径仅对有权限的已登录用户显示
+func (c *Config) FilterNavsByPermission(navs []NavItem, username string) []NavItem {
+	var filtered []NavItem
+	for _, nav := range navs {
+		navPath := nav.URL
+		if navPath == "" {
+			filtered = append(filtered, nav)
+			continue
+		}
+		// 公开可访问 → 所有人显示
+		if !c.IsNeedAuth(navPath, false) {
+			filtered = append(filtered, nav)
+			continue
+		}
+		// 需要认证 → 仅对有权限的已登录用户显示
+		if username != "" {
+			authConfig, exists := c.MatchUserAuthConfig(username, navPath)
+			if exists && authConfig.Permission != PermNO {
+				filtered = append(filtered, nav)
+			}
+		}
+	}
+	return filtered
 }
 
 // AuthEnabled 是否启用认证

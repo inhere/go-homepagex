@@ -2,6 +2,8 @@ import { writable } from 'svelte/store';
 
 export const pageConfig = writable({});
 export const currentRoute = writable('/');
+// 当前登录用户信息，null 表示游客
+export const userInfo = writable(null);
 
 function createPersistedStore(key, initialValue) {
   const storedValue = localStorage.getItem(key);

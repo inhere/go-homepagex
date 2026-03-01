@@ -98,8 +98,20 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Request API GET %s, Pagefile: %s", r.RequestURI, pageConfig.Pagefile)
-	s.sendJSON(w, pageConfig)
+	// 获取当前认证用户（由 BasicAuthMiddleware 注入 context）
+	username, _ := r.Context().Value(ContextKeyUsername).(string)
+
+	// 构建响应：过滤导航项 + 附加用户信息
+	resp := &PageDataResponse{
+		PageConfig: pageConfig,
+		Navs:       s.config.FilterNavsByPermission(pageConfig.Navs, username),
+	}
+	if username != "" {
+		resp.UserInfo = &LoginInfo{Username: username}
+	}
+
+	log.Printf("Request API GET %s, Pagefile: %s, User: %q", r.RequestURI, pageConfig.Pagefile, username)
+	s.sendJSON(w, resp)
 }
 
 // StaticFileHandler 静态文件服务

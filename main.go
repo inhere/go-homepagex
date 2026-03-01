@@ -47,6 +47,8 @@ func main() {
 func registerRoutes(mux *http.ServeMux) {
 	// API 路由
 	mux.HandleFunc("/api/health", server.HealthHandler)
+	mux.HandleFunc("/api/auth", server.AuthHandler)
+	mux.HandleFunc("/api/logout", server.LogoutHandler)
 	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.GetPageConfigHandler))
 	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.GetPageConfigHandler))
 
