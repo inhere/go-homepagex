@@ -5,7 +5,7 @@
   import Toolbar from './components/Toolbar.svelte';
   import TagFilter from './components/TagFilter.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
-  import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors } from './stores.js';
+  import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors, userInfo } from './stores.js';
 
   let loading = true;
   let error = null;
@@ -117,7 +117,12 @@
     try {
       currentRoute.set(currentRoutePath);
 
-      const response = await fetch(apiPath);
+      const fetchOptions = {};
+      if (sessionStorage.getItem('loggedOut') === '1') {
+        // 退出登录后发送空凭据，覆盖浏览器缓存的凭据，以游客身份访问
+        fetchOptions.headers = { 'Authorization': 'Basic Og==' };
+      }
+      const response = await fetch(apiPath, fetchOptions);
       const result = await response.json();
 
       if (!result.success) {
@@ -125,6 +130,7 @@
       }
 
       pageConfig.set(result.data);
+      userInfo.set(result.data.user_info || null);
       if (!localStorage.getItem('viewStyle')) {
         viewStyle.set(result.data.style || 'cards');
       }
