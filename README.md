@@ -66,6 +66,24 @@ pages_dir: "./pages"
 frontend_dir: "./frontend/build"
 ```
 
+#### 认证配置
+
+格式为 `{username}:{password}@{path:perm},{path2:perm2}`
+
+- 使用 `@` 分隔账号和路径。无账号表示匿名用户。
+- 使用 `:` 分隔用户名和密码。
+- 使用 `,` 分隔多个路径。
+- 使用路径后缀 `:rw`/`:ro` 设置权限：`读写`/`只读`。`:ro` 可省略。
+- 路径可以使用通配符 `*` 表示任意路径，不带 `*` 表示精确匹配
+- 路径可以使用前缀 `!` 表示排除路径
+
+> [!NOTE] 权限按页面配置，有页面的权限就有对应 api 的权限
+
+- `admin:admin@*:rw` admin 具有所有路径的完整权限。
+- `guest:guest@*` guest 具有所有路径的只读权限。
+- `user:pass@*:rw,/dir1/*` user 对 `/*` 具有读写权限，对 `/dir1/*` 具有只读权限。
+- `@*` 所有路径公开访问，任何人都可以查看。
+
 ### 页面配置 (pages/main.yaml)
 
 ```yaml
@@ -98,7 +116,7 @@ services:
 
 - `/` 路由对应 `pages/home.yaml`
 - `/another` 路由对应 `pages/another.yaml`
-- 依此类推: `{name}` -> `{name}.yaml`
+- 依此类推: `/{name}` -> `/pages/{name}.yaml`
 
 ## 开发
 

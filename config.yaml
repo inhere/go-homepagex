@@ -4,17 +4,34 @@ server:
   port: "8090"
   mode: debug # debug 或 release
 
-# Basic 认证配置
-auth:
-  enabled: false
-  username: "admin"
-  password: "admin"
+# auths 认证配置
+# 规则: user:pass@path1:perm,path2:perm2
+auths:
+  - admin:admin123@*:rw # 给 admin 分配所有路径的读写权限
+  - user1:user123@/tools:rw,/*:ro # 给 user1 分配 /tools 路径的读写权限，其他路径只读
+  - "@*,!/inner*" # 访客：所有路径可访问，无需认证，除了 /inner 开头的路径
+
+# see https://www.jsdelivr.com/
+icons_cdn:
+  # 图标 CDN 配置 see https://dashboardicons.com/ 搜索
+  dashboard-icons: "https://cdn.jsdelivr.net/gh/homarr-labs/"
+
 
 # 页面配置文件存放目录
 pages_dir: "./pages"
-
 # 前端构建目录
 frontend_dir: "./frontend/build"
+
+#
+# 页面默认配置
+# 所有页面都继承这些配置，可在页面配置文件中覆盖
+page_defaults:
+  theme: "default"
+  color: "blue"
+  style: "cards"  # cards 或 list
+  columns: "3"
+  # 默认 logo 配置
+  logo: "logo.png"
 
 # 默认导航配置
 page_navs:
@@ -24,6 +41,9 @@ page_navs:
   - name: "Tools"
     icon: "fas fa-tools"
     url: "/tools"
+  - name: "InnerTools"
+    icon: "fas fa-tools"
+    url: "/inner-tools"
   - name: "Another"
     icon: "fas fa-star"
     url: "/another"

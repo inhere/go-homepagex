@@ -45,3 +45,5 @@ Thumbs.db
 # Logs
 logs/
 *.log
+.omc/
+.claude/
