@@ -38,9 +38,6 @@ func main() {
 	log.Printf("Page data directory: %s", config.PagesDir)
 	log.Printf("Frontend directory: %s", config.FrontendDir)
 	fmt.Println()
-	if config.Auth.Enabled {
-		log.Printf("Basic auth enabled for user: %s", config.Auth.Username)
-	}
 
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("Server listen failed: %v", err)
@@ -56,6 +53,6 @@ func registerRoutes(mux *http.ServeMux) {
 	// 图标缓存路由
 	mux.HandleFunc("/icons-local/", server.GetIconLocalHandler)
 
-	// 静态文件路由（前端应用）
+	// 静态文件路由（前端应用）— 同样受认证保护
 	mux.HandleFunc("/", server.BasicAuthMiddleware(server.StaticFileHandler))
 }
