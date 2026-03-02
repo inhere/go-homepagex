@@ -7,7 +7,7 @@
 
   function logout() {
     sessionStorage.setItem('loggedOut', '1');
-    window.location.reload();
+    window.location.href = '/';
   }
 
   function handleLoginClick() {

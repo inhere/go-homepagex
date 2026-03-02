@@ -123,6 +123,14 @@
         fetchOptions.headers = { 'Authorization': 'Basic Og==' };
       }
       const response = await fetch(apiPath, fetchOptions);
+
+      if (response.status === 401) {
+        // 需要认证：清除 loggedOut 标记，跳转到认证端点，认证成功后重定向回当前页面
+        sessionStorage.removeItem('loggedOut');
+        window.location.href = '/api/auth?return=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
       const result = await response.json();
 
       if (!result.success) {

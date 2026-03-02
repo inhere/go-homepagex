@@ -55,6 +55,6 @@ func registerRoutes(mux *http.ServeMux) {
 	// 图标缓存路由
 	mux.HandleFunc("/icons-local/", server.GetIconLocalHandler)
 
-	// 静态文件路由（前端应用）— 同样受认证保护
-	mux.HandleFunc("/", server.BasicAuthMiddleware(server.StaticFileHandler))
+	// 静态文件路由（前端应用）— 不需要认证，认证在 API 层处理
+	mux.HandleFunc("/", server.StaticFileHandler)
 }
