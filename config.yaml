@@ -26,13 +26,7 @@ frontend_dir: "./frontend/build"
 # 页面默认配置
 # 所有页面都继承这些配置，可在页面配置文件中覆盖
 page_defaults:
-  theme: "default"
-  color: "blue"
-  style: "cards"  # cards 或 list
-  columns: "3"
-  # 默认 logo 配置
-  logo: "logo.png"
-
+  theme: "ocean-depths"
 # 默认导航配置
 page_navs:
   - name: "Home"

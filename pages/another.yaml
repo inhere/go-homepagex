@@ -2,8 +2,7 @@
 title: "Another Page"
 subtitle: "Secondary dashboard"
 
-theme: "default"
-color: "green"
+theme: "forest-canopy"
 style: "list"  # 使用列表样式
 columns: "1"
 

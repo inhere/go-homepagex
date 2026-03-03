@@ -18,8 +18,12 @@
   $: themeVars = `
     --theme-primary: ${themeColors.primary};
     --theme-secondary: ${themeColors.secondary};
+    --theme-accent: ${themeColors.accent};
+    --theme-background: ${themeColors.background};
     --theme-primary-rgba: ${themeColors.primary}33;
     --theme-secondary-rgba: ${themeColors.secondary}33;
+    --theme-accent-rgba: ${themeColors.accent}33;
+    --theme-background-rgba: ${themeColors.background}dd;
   `;
 
   function matchesAllKeywords(text, keywords) {
@@ -249,22 +253,26 @@
 
   :global(body) {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: var(--theme-primary);
     min-height: 100vh;
-    color: #e4e4e4;
-    transition: background 0.5s ease;
+    color: var(--theme-background);
+    transition: background 0.5s ease, color 0.5s ease;
   }
 
   :global(:root) {
-    --theme-primary: #667eea;
-    --theme-secondary: #764ba2;
-    --theme-primary-rgba: rgba(102, 126, 234, 0.2);
-    --theme-secondary-rgba: rgba(118, 75, 162, 0.2);
+    --theme-primary: #1a2332;
+    --theme-secondary: #2d8b8b;
+    --theme-accent: #a8dadc;
+    --theme-background: #f1faee;
+    --theme-primary-rgba: rgba(26, 35, 50, 0.2);
+    --theme-secondary-rgba: rgba(45, 139, 139, 0.2);
+    --theme-accent-rgba: rgba(168, 218, 220, 0.2);
+    --theme-background-rgba: rgba(241, 250, 238, 0.87);
   }
 
   .theme-wrapper {
     min-height: 100vh;
-    background: linear-gradient(135deg, #1a1a2e 0%, var(--theme-primary-rgba) 50%, var(--theme-secondary-rgba) 100%);
+    background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 50%, var(--theme-accent) 100%);
     transition: background 0.5s ease;
   }
 

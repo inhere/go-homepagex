@@ -47,3 +47,8 @@ logs/
 *.log
 .omc/
 .claude/
+.agents/
+.iflow/
+.qoder/
+.trae/
+skills-lock.json

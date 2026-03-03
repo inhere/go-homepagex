@@ -3,8 +3,7 @@
 title: "Home Dashboard"
 subtitle: "Welcome to your dashboard"
 
-theme: "default"
-color: "blue"
+theme: "ocean-depths"
 style: "cards"  # cards 或 list
 columns: "3"
 
