@@ -153,3 +153,14 @@ func (m *PageDataManager) LoadPageConfig(name string) (*PageConfig, error) {
 	}
 	return page, nil
 }
+
+// ClearCache 清除指定页面的缓存
+func (m *PageDataManager) ClearCache(name string) {
+	if m.cacheMap == nil {
+		return
+	}
+	
+	filename := m.getFilename(name)
+	delete(m.cacheMap, filename)
+}
+

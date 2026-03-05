@@ -1,10 +1,11 @@
-<script>
+  <script>
   import { onMount } from 'svelte';
   import Header from './components/Header.svelte';
   import Navbar from './components/Navbar.svelte';
   import Toolbar from './components/Toolbar.svelte';
   import TagFilter from './components/TagFilter.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
+  import YamlEditor from './components/YamlEditor.svelte';
   import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors, userInfo } from './stores.js';
 
   let loading = true;
@@ -13,6 +14,7 @@
   let selectedTag = '';
   let filteredServices = [];
   let allTags = [];
+  let showYamlEditor = false;
 
   $: themeColors = getThemeColors($currentTheme);
   $: themeVars = `
@@ -179,6 +181,20 @@
   function handleSelectTag(tag) {
     selectedTag = tag;
   }
+
+  function openYamlEditor() {
+    showYamlEditor = true;
+  }
+
+  function closeYamlEditor() {
+    showYamlEditor = false;
+  }
+
+  function handleSaveSuccess() {
+    showYamlEditor = false;
+    // 刷新页面数据
+    loadConfig(getRoute());
+  }
 </script>
 
 <svelte:head>
@@ -202,6 +218,7 @@
         title={$pageConfig.title}
         subtitle={$pageConfig.subtitle}
         logo={$pageConfig.logo}
+        on:open-editor={openYamlEditor}
       />
 
       {#if $pageConfig.navs && $pageConfig.navs.length > 0}
@@ -242,6 +259,15 @@
       {/if}
     {/if}
   </main>
+
+  <!-- YAML Editor Modal -->
+  {#if showYamlEditor}
+    <YamlEditor
+      pagePath={$currentRoute}
+      on:close={closeYamlEditor}
+      on:save-success={handleSaveSuccess}
+    />
+  {/if}
 </div>
 
 <style>

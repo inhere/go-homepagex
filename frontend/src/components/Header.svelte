@@ -1,9 +1,16 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import { userInfo } from '../stores.js';
+
+  const dispatch = createEventDispatcher();
 
   export let title = 'Home Dashboard';
   export let subtitle = '';
   export let logo = '';
+
+  function openYamlEditor() {
+    dispatch('open-editor');
+  }
 
   function logout() {
     sessionStorage.setItem('loggedOut', '1');
@@ -42,6 +49,10 @@
           <i class="fas fa-user-circle"></i>
           <span class="username">{$userInfo.username}</span>
         </span>
+        <button class="btn-auth" on:click={openYamlEditor} title="编辑页面">
+          <i class="fas fa-edit"></i>
+          <span>编辑</span>
+        </button>
         <button class="btn-auth" on:click={logout} title="退出登录">
           <i class="fas fa-sign-out-alt"></i>
           <span>退出</span>

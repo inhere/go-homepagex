@@ -52,6 +52,11 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.GetPageConfigHandler))
 	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.GetPageConfigHandler))
 
+	// YAML 编辑相关路由
+	mux.HandleFunc("/api/page/raw", server.BasicAuthMiddleware(server.GetPageRawHandler))
+	mux.HandleFunc("/api/page/raw/", server.BasicAuthMiddleware(server.GetPageRawHandler))
+	mux.HandleFunc("/api/page/save", server.BasicAuthMiddleware(server.SavePageConfigHandler))
+
 	// 图标缓存路由
 	mux.HandleFunc("/icons-local/", server.GetIconLocalHandler)
 

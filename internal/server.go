@@ -27,7 +27,7 @@ func NewServer(config *Config) *Server {
 }
 
 // sendJSON 发送 JSON 响应
-func (s *Server) sendJSON(w http.ResponseWriter, data interface{}) {
+func (s *Server) sendJSON(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(APIResponse{
 		Success: true,
