@@ -45,17 +45,13 @@ func main() {
 }
 
 func registerRoutes(mux *http.ServeMux) {
-	// API 路由
-	mux.HandleFunc("/api/health", server.HealthHandler)
-	mux.HandleFunc("/api/auth", server.AuthHandler)
-	mux.HandleFunc("/api/logout", server.LogoutHandler)
-	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.GetPageConfigHandler))
-	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.GetPageConfigHandler))
+	// API 路由 - 统一的页面 API 处理器（支持 GET 和 POST）
+	mux.HandleFunc("/api/page", server.BasicAuthMiddleware(server.PageApiHandler))
+	mux.HandleFunc("/api/page/", server.BasicAuthMiddleware(server.PageApiHandler))
 
-	// YAML 编辑相关路由
-	mux.HandleFunc("/api/page/raw", server.BasicAuthMiddleware(server.GetPageRawHandler))
-	mux.HandleFunc("/api/page/raw/", server.BasicAuthMiddleware(server.GetPageRawHandler))
-	mux.HandleFunc("/api/page/save", server.BasicAuthMiddleware(server.SavePageConfigHandler))
+	// 登录/退出接口（UI 登录）
+	mux.HandleFunc("/api/login", server.LoginHandler)
+	mux.HandleFunc("/api/logout", server.LogoutHandler)
 
 	// 图标缓存路由
 	mux.HandleFunc("/icons-local/", server.GetIconLocalHandler)
