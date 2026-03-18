@@ -22,8 +22,9 @@
 
   async function loadYaml() {
     try {
-      const response = await fetch(`/api/page/raw${pagePath}`);
-      if (!response.ok) throw new Error('加载失败');
+      const response = await fetch(`/api/page${pagePath}?op=r`, {
+        credentials: 'include',
+      });
       
       const data = await response.json();
       if (data.success && data.data) {
@@ -48,13 +49,13 @@
     error = null;
 
     try {
-      const response = await fetch('/api/page/save', {
+      const response = await fetch(`/api/page${pagePath}?op=w`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
-          path: pagePath,
           content: editorValue
         })
       });
@@ -77,7 +78,11 @@
     dispatch('close');
   }
 
-  function handleOverlayClick() {
+  function handleOverlayClick(event) {
+    // 仅当点击在遮罩本身（而不是对话框内容）时才关闭
+    if (event.target !== event.currentTarget) {
+      return;
+    }
     handleClose();
   }
 
@@ -105,8 +110,13 @@
   }
 </script>
 
-<div class="modal-overlay" on:click={handleOverlayClick} on:keydown={handleKeydown} role="button" tabindex="-1">
-  <div class="modal-container" on:click|stopPropagation role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<button
+  type="button"
+  class="modal-overlay"
+  on:click={handleOverlayClick}
+  aria-label="关闭编辑弹窗"
+>
+  <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-header">
       <h2 class="modal-title">
         <i class="fas fa-code"></i>
@@ -170,10 +180,11 @@
       </button>
     </div>
   </div>
-</div>
+</button>
 
 <style>
   .modal-overlay {
+    /* 让按钮表现得像一个全屏容器，而不是传统按钮 */
     position: fixed;
     top: 0;
     left: 0;
@@ -186,6 +197,13 @@
     justify-content: center;
     z-index: 9999;
     padding: 20px;
+    border: none;
+    outline: none;
+    cursor: default;
+  }
+
+  .modal-overlay:focus {
+    outline: none;
   }
 
   .modal-container {

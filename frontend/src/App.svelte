@@ -6,6 +6,7 @@
   import TagFilter from './components/TagFilter.svelte';
   import ServiceGroup from './components/ServiceGroup.svelte';
   import YamlEditor from './components/YamlEditor.svelte';
+  import LoginModal from './components/LoginModal.svelte';
   import { pageConfig, currentRoute, viewStyle, currentTheme, getThemeColors, userInfo } from './stores.js';
 
   let loading = true;
@@ -15,6 +16,7 @@
   let filteredServices = [];
   let allTags = [];
   let showYamlEditor = false;
+  let showLoginModal = false;
 
   $: themeColors = getThemeColors($currentTheme);
   $: themeVars = `
@@ -123,17 +125,14 @@
     try {
       currentRoute.set(currentRoutePath);
 
-      const fetchOptions = {};
-      if (sessionStorage.getItem('loggedOut') === '1') {
-        // 退出登录后发送空凭据，覆盖浏览器缓存的凭据，以游客身份访问
-        fetchOptions.headers = { 'Authorization': 'Basic Og==' };
-      }
+      const fetchOptions = {
+        credentials: 'include',
+      };
       const response = await fetch(apiPath, fetchOptions);
 
       if (response.status === 401) {
-        // 需要认证：清除 loggedOut 标记，跳转到认证端点，认证成功后重定向回当前页面
-        sessionStorage.removeItem('loggedOut');
-        window.location.href = '/api/auth?return=' + encodeURIComponent(window.location.pathname);
+        // 需要认证：弹出登录对话框，由用户输入用户名和密码
+        showLoginModal = true;
         return;
       }
 
@@ -195,6 +194,27 @@
     // 刷新页面数据
     loadConfig(getRoute());
   }
+
+  function openLoginModal() {
+    showLoginModal = true;
+  }
+
+  function handleLoginSuccess(event) {
+    const info = event.detail;
+    if (info && info.username) {
+      // 后端可能返回包含权限等扩展字段的用户信息，这里整体保存
+      userInfo.set(info);
+      showLoginModal = false;
+      // 登录成功后重新加载当前页面数据
+      loadConfig(getRoute());
+    }
+  }
+
+  function handleLogout() {
+    userInfo.set(null);
+    // 退出后按游客身份重新加载数据
+    loadConfig(getRoute());
+  }
 </script>
 
 <svelte:head>
@@ -219,6 +239,8 @@
         subtitle={$pageConfig.subtitle}
         logo={$pageConfig.logo}
         on:open-editor={openYamlEditor}
+        on:open-login={openLoginModal}
+        on:logged-out={handleLogout}
       />
 
       {#if $pageConfig.navs && $pageConfig.navs.length > 0}
@@ -268,6 +290,13 @@
       on:save-success={handleSaveSuccess}
     />
   {/if}
+
+  <!-- Login Modal -->
+  <LoginModal
+    visible={showLoginModal}
+    on:close={() => (showLoginModal = false)}
+    on:login-success={handleLoginSuccess}
+  />
 </div>
 
 <style>
