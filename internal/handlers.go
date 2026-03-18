@@ -81,15 +81,38 @@ func (s *Server) GetIconLocalHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// GetPageConfigHandler 获取页面配置数据
-func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+// PageApiHandler 页面 API 统一处理器
+// GET /api/page/xxx - 获取页面配置
+// GET /api/page/xxx?op=r - 获取原始 YAML 内容
+// POST /api/page/xxx?op=w - 保存 YAML 内容
+func (s *Server) PageApiHandler(w http.ResponseWriter, r *http.Request) {
+	// 从 URL 路径获取路由
+	path := strings.TrimPrefix(r.URL.Path, "/api/page")
+	if path == "" {
+		path = "/"
+	}
+
+	// 根据请求方法分发
+	switch r.Method {
+	case http.MethodGet:
+		s.handlePageGet(w, r, path)
+	case http.MethodPost:
+		s.handlePagePost(w, r, path)
+	default:
 		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// handlePageGet 处理 GET 请求
+func (s *Server) handlePageGet(w http.ResponseWriter, r *http.Request, path string) {
+	// 检查 op 参数
+	op := r.URL.Query().Get("op")
+	if op == "r" {
+		// 获取原始 YAML 内容
+		s.getPageRawContent(w, r, path)
 		return
 	}
 
-	// 从 URL 路径获取路由
-	path := strings.TrimPrefix(r.URL.Path, "/api/page")
 	// 检查 refresh 参数
 	refresh := strutil.SafeBool(r.URL.Query().Get("refresh"))
 
@@ -109,11 +132,68 @@ func (s *Server) GetPageConfigHandler(w http.ResponseWriter, r *http.Request) {
 		Navs:       s.config.FilterNavsByPermission(pageConfig.Navs, username),
 	}
 	if username != "" {
-		resp.UserInfo = &LoginInfo{Username: username}
+		resp.UserInfo = &LoginInfo{
+			Username:    username,
+			Permissions: s.config.UserPermissions(username),
+		}
 	}
 
 	log.Printf("Request API GET %s, Pagefile: %s, User: %q", r.RequestURI, pageConfig.Pagefile, username)
 	s.sendJSON(w, resp)
+}
+
+// handlePagePost 处理 POST 请求（保存 YAML）
+func (s *Server) handlePagePost(w http.ResponseWriter, r *http.Request, path string) {
+	// 获取当前认证用户
+	username, _ := r.Context().Value(ContextKeyUsername).(string)
+	if username == "" {
+		http.Error(w, "Forbidden: login required", http.StatusForbidden)
+		return
+	}
+
+	// 解析请求体（只需要 content）
+	var req struct {
+		Content string `json:"content"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.sendError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// 获取页面配置以获取文件路径
+	pageConfig, err := PageDataMgr.GetPageConfig(path, false)
+	if err != nil {
+		s.sendError(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	// 验证 YAML 格式
+	var testConfig PageConfig
+	if err := yaml.Unmarshal([]byte(req.Content), &testConfig); err != nil {
+		s.sendJSON(w, map[string]interface{}{
+			"success": false,
+			"error":   "YAML 格式错误: " + err.Error(),
+		})
+		return
+	}
+
+	// 写入文件
+	if err := os.WriteFile(pageConfig.Pagefile, []byte(req.Content), 0644); err != nil {
+		log.Printf("Error writing file %s: %v", pageConfig.Pagefile, err)
+		s.sendError(w, "Failed to save file", http.StatusInternalServerError)
+		return
+	}
+
+	// 清除缓存 - 强制下次重新加载
+	PageDataMgr.ClearCache(path)
+
+	log.Printf("Page config saved: %s by user: %s", pageConfig.Pagefile, username)
+
+	s.sendJSON(w, map[string]interface{}{
+		"success": true,
+		"message": "保存成功",
+	})
 }
 
 // StaticFileHandler 静态文件服务
@@ -156,19 +236,8 @@ func (s *Server) StaticFileHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, fullPath)
 }
 
-// GetPageRawHandler 获取页面原始 YAML 内容
-func (s *Server) GetPageRawHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// 从 URL 路径获取路由
-	path := strings.TrimPrefix(r.URL.Path, "/api/page/raw")
-	if path == "" {
-		path = "/"
-	}
-
+// getPageRawContent 获取页面原始 YAML 内容（内部方法）
+func (s *Server) getPageRawContent(w http.ResponseWriter, r *http.Request, path string) {
 	// 获取页面配置以获取文件路径
 	pageConfig, err := PageDataMgr.GetPageConfig(path, false)
 	if err != nil {
@@ -192,68 +261,3 @@ func (s *Server) GetPageRawHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// SavePageConfigHandler 保存页面 YAML 配置
-func (s *Server) SavePageConfigHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// 获取当前认证用户
-	username, _ := r.Context().Value(ContextKeyUsername).(string)
-	if username == "" {
-		http.Error(w, "Forbidden: login required", http.StatusForbidden)
-		return
-	}
-
-	// 解析请求体
-	var req struct {
-		Path    string `json:"path"`
-		Content string `json:"content"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		s.sendError(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	// 标准化路径
-	path := req.Path
-	if path == "" {
-		path = "/"
-	}
-
-	// 获取页面配置以获取文件路径
-	pageConfig, err := PageDataMgr.GetPageConfig(path, false)
-	if err != nil {
-		s.sendError(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	// 验证 YAML 格式
-	var testConfig PageConfig
-	if err := yaml.Unmarshal([]byte(req.Content), &testConfig); err != nil {
-		s.sendJSON(w, map[string]interface{}{
-			"success": false,
-			"error":   "YAML 格式错误: " + err.Error(),
-		})
-		return
-	}
-
-	// 写入文件
-	if err := os.WriteFile(pageConfig.Pagefile, []byte(req.Content), 0644); err != nil {
-		log.Printf("Error writing file %s: %v", pageConfig.Pagefile, err)
-		s.sendError(w, "Failed to save file", http.StatusInternalServerError)
-		return
-	}
-
-	// 清除缓存 - 强制下次重新加载
-	PageDataMgr.ClearCache(path)
-
-	log.Printf("Page config saved: %s by user: %s", pageConfig.Pagefile, username)
-
-	s.sendJSON(w, map[string]interface{}{
-		"success": true,
-		"message": "保存成功",
-	})
-}

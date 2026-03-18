@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/goccy/go-yaml"
 )
 
 // ServerConfig 服务器配置
 type ServerConfig struct {
-	Mode string `yaml:"mode" json:"mode"` // debug or release
-	Port string `yaml:"port" json:"port"`
+	Mode       string `yaml:"mode" json:"mode"`               // debug or release
+	Port       string `yaml:"port" json:"port"`               // 监听端口
+	SessionTTL string `yaml:"session_ttl" json:"session_ttl"` // 会话有效期，如 "2h", "30m"
 }
 
 // NavItem 导航项
@@ -68,7 +70,8 @@ func (c *AuthConfig) IsValid() bool {
 func newDefaultConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Port: "8090",
+			Port:       "8090",
+			SessionTTL: "2h",
 		},
 		Auths:       []string{"@*"}, // 所有路径可访问，无需认证
 		PagesDir:    "./pages",
@@ -92,6 +95,9 @@ func LoadConfig(path string) (*Config, error) {
 	// 设置默认值
 	if config.Server.Port == "" {
 		config.Server.Port = "8090"
+	}
+	if config.Server.SessionTTL == "" {
+		config.Server.SessionTTL = "2h"
 	}
 	if config.PagesDir == "" {
 		config.PagesDir = "./pages"
@@ -371,4 +377,51 @@ func (c *Config) AuthEnabled() bool {
 // ParsedAuths 解析后的认证配置
 func (c *Config) ParsedAuths() map[string]*AuthConfig {
 	return c.parsedAuths
+}
+
+// SessionTTLDuration 返回会话有效期（从配置 server.session_ttl 解析），解析失败时返回默认 2h
+func (c *Config) SessionTTLDuration() time.Duration {
+	if c == nil {
+		return 2 * time.Hour
+	}
+
+	raw := strings.TrimSpace(c.Server.SessionTTL)
+	if raw == "" {
+		return 2 * time.Hour
+	}
+
+	d, err := time.ParseDuration(raw)
+	if err != nil || d <= 0 {
+		// 配置错误时回退默认值
+		return 2 * time.Hour
+	}
+	return d
+}
+
+// UserPermission 用户某路径的权限描述
+type UserPermission struct {
+	Path       string `json:"path"`
+	Permission string `json:"perm"`
+}
+
+// UserPermissions 返回某个用户在配置中的权限规则列表
+// 直接基于解析后的 PathPerms 生成，便于前端展示
+func (c *Config) UserPermissions(username string) []UserPermission {
+	auth, exists := c.parsedAuths[username]
+	if !exists {
+		return nil
+	}
+
+	perms := make([]UserPermission, 0, len(auth.PathPerms))
+	for _, pathWithPerm := range auth.PathPerms {
+		pattern, perm, found := strings.Cut(pathWithPerm, ":")
+		if !found {
+			perm = PermRO
+		}
+		perms = append(perms, UserPermission{
+			Path:       pattern,
+			Permission: perm,
+		})
+	}
+	return perms
 }

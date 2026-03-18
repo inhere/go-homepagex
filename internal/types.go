@@ -2,7 +2,8 @@ package internal
 
 // LoginInfo 当前登录用户信息
 type LoginInfo struct {
-	Username string `json:"username"`
+	Username    string           `json:"username"`
+	Permissions []UserPermission `json:"permissions,omitempty"`
 }
 
 // PageDataResponse 页面数据接口响应 DTO

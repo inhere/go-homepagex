@@ -2,17 +2,23 @@ package internal
 
 import (
 	"context"
-	"crypto/subtle"
-	"encoding/base64"
+	"crypto/rand"
+	"encoding/json"
+	"encoding/hex"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type contextKey string
 
 // ContextKeyUsername request context 中存储已认证用户名的 key
 const ContextKeyUsername contextKey = "username"
+
+const (
+	sessionCookieName = "hpx_session"
+)
 
 func (s *Server) BasicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -24,118 +30,166 @@ func (s *Server) BasicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		isWrite := r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions
 
-		authHeader := r.Header.Get("Authorization")
-		if authHeader != "" {
-			// 有认证信息：解析并验证
-			after, ok := strings.CutPrefix(authHeader, "Basic ")
-			if !ok {
-				s.requestAuth(w)
+		// 从 session cookie 中获取已登录用户
+		username := s.usernameFromRequest(r)
+
+		// 已登录用户：基于配置做权限判断
+		if username != "" {
+			authConfig, exists := s.config.MatchUserAuthConfig(username, reqPath)
+			if !exists || authConfig.Permission == PermNO {
+				s.sendError(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 
-			decoded, err := base64.StdEncoding.DecodeString(after)
-			if err != nil {
-				log.Printf("BasicAuthMiddleware: base64 decode error: %v", err)
-				s.requestAuth(w)
+			if isWrite && authConfig.Permission != PermRW {
+				s.sendError(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 
-			parts := strings.SplitN(string(decoded), ":", 2)
-			if len(parts) == 2 {
-				username, password := parts[0], parts[1]
-
-				authConfig, exists := s.config.MatchUserAuthConfig(username, reqPath)
-				if exists {
-					if authConfig.Permission == PermNO {
-						s.requestAuth(w)
-						return
-					}
-
-					usernameMatch := subtle.ConstantTimeCompare([]byte(username), []byte(authConfig.Username)) == 1
-					passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(authConfig.Password)) == 1
-
-					if usernameMatch && passwordMatch {
-						// 写操作需要 rw 权限
-						if isWrite && authConfig.Permission != PermRW {
-							http.Error(w, "Forbidden", http.StatusForbidden)
-							return
-						}
-						// 将认证用户名注入 request context
-						ctx := context.WithValue(r.Context(), ContextKeyUsername, username)
-						next(w, r.WithContext(ctx))
-						return
-					}
-				} else {
-					// 用户名不在配置中：回退到公开访问检查
-					// 场景：前端退出登录后发送空凭据（Basic Og==），应视为游客
-					if !s.config.IsNeedAuth(reqPath, isWrite) {
-						ctx := context.WithValue(r.Context(), ContextKeyUsername, "")
-						next(w, r.WithContext(ctx))
-						return
-					}
-				}
-			}
-
-			s.requestAuth(w)
+			// 将认证用户名注入 request context
+			ctx := context.WithValue(r.Context(), ContextKeyUsername, username)
+			next(w, r.WithContext(ctx))
 			return
 		}
 
-		// 没有认证信息：检查 path 是否允许匿名访问
+		// 未登录用户：检查 path 是否允许匿名访问
 		if s.config.IsNeedAuth(reqPath, isWrite) {
-			s.requestAuth(w)
+			// 不再发送 WWW-Authenticate 头，改为纯 JSON 401，由前端弹出登录 UI
+			s.sendError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+
 		// 公开访问，注入空用户名（游客）
 		ctx := context.WithValue(r.Context(), ContextKeyUsername, "")
 		next(w, r.WithContext(ctx))
 	}
 }
 
-func (s *Server) requestAuth(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="HomePagex"`)
-	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// usernameFromRequest 从请求的 session cookie 中解析当前用户名
+func (s *Server) usernameFromRequest(r *http.Request) string {
+	cookie, err := r.Cookie(sessionCookieName)
+	if err != nil || cookie.Value == "" {
+		return ""
+	}
+
+	s.sessionsMu.RLock()
+	session, exists := s.sessions[cookie.Value]
+	s.sessionsMu.RUnlock()
+
+	if !exists {
+		return ""
+	}
+
+	// 简单过期检查：过期则删除会话并视为未登录
+	if time.Now().After(session.ExpiresAt) {
+		s.deleteSession(cookie.Value)
+		return ""
+	}
+
+	return session.Username
 }
 
-// AuthHandler 触发 Basic Auth 认证，成功后重定向
-// 用于前端"登录"按钮：浏览器导航到此 URL 时弹出认证对话框，认证成功后跳回原页面
-func (s *Server) AuthHandler(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		s.requestAuth(w)
-		return
+// createSession 创建新的会话并返回 sessionID
+func (s *Server) createSession(username string) string {
+	// 生成随机 sessionID
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		// 理论上不会失败，失败时回退到时间戳+用户名
+		log.Printf("createSession: rand.Read error: %v", err)
+		return username + "-" + time.Now().Format(time.RFC3339Nano)
 	}
+	sessionID := hex.EncodeToString(buf)
 
-	after, ok := strings.CutPrefix(authHeader, "Basic ")
-	if !ok {
-		s.requestAuth(w)
-		return
+	s.sessionsMu.Lock()
+	s.sessions[sessionID] = &Session{
+		Username:  username,
+		ExpiresAt: time.Now().Add(s.config.SessionTTLDuration()),
 	}
+	s.sessionsMu.Unlock()
 
-	decoded, err := base64.StdEncoding.DecodeString(after)
-	if err != nil {
-		s.requestAuth(w)
-		return
-	}
-
-	parts := strings.SplitN(string(decoded), ":", 2)
-	if len(parts) == 2 {
-		username, password := parts[0], parts[1]
-		if s.config.CheckCredentials(username, password) {
-			returnURL := r.URL.Query().Get("return")
-			if returnURL == "" || !strings.HasPrefix(returnURL, "/") {
-				returnURL = "/"
-			}
-			http.Redirect(w, r, returnURL, http.StatusFound)
-			return
-		}
-	}
-
-	s.requestAuth(w)
+	return sessionID
 }
 
-// LogoutHandler 退出登录：始终返回 401，触发浏览器清除缓存的 Basic Auth 凭据
+// deleteSession 删除会话
+func (s *Server) deleteSession(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+	s.sessionsMu.Lock()
+	delete(s.sessions, sessionID)
+	s.sessionsMu.Unlock()
+}
+
+// LoginHandler UI 登录接口：验证用户名与密码，成功后设置 session cookie
+func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.sendError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	req.Username = strings.TrimSpace(req.Username)
+	if req.Username == "" || req.Password == "" {
+		s.sendError(w, "用户名和密码不能为空", http.StatusBadRequest)
+		return
+	}
+
+	if !s.config.CheckCredentials(req.Username, req.Password) {
+		// 统一错误信息，避免探测账号是否存在
+		s.sendError(w, "用户名或密码错误", http.StatusUnauthorized)
+		return
+	}
+
+	sessionID := s.createSession(req.Username)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    sessionID,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		// 不设置 Expires/MaxAge，浏览器会话结束即失效
+	})
+
+	// 返回当前用户信息和权限，便于前端更新状态与展示
+	s.sendJSON(w, &LoginInfo{
+		Username:    req.Username,
+		Permissions: s.config.UserPermissions(req.Username),
+	})
+}
+
+// LogoutHandler 退出登录：清理服务端会话并清除 cookie
 func (s *Server) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="HomePagex"`)
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	w.WriteHeader(http.StatusUnauthorized)
+	if r.Method != http.MethodPost && r.Method != http.MethodGet {
+		s.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if cookie, err := r.Cookie(sessionCookieName); err == nil {
+		s.deleteSession(cookie.Value)
+	}
+
+	// 清除 cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	s.sendJSON(w, map[string]string{
+		"message": "logged out",
+	})
 }
