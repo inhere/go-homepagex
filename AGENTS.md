@@ -3,6 +3,7 @@
 Guide for AI agents working in the HomePageX codebase.
 
 - 优先使用中文回答和响应结果
+- 过长的代码变动(超过30行)不要在终端完整输出，只输出前后部分即可
 
 ## Project Overview
 

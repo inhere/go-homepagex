@@ -8,12 +8,8 @@
   export let subtitle = '';
   export let logo = '';
 
-   // 是否展示权限下拉详情
+  // 是否展示权限下拉详情
   let showPermDropdown = false;
-
-  function openYamlEditor() {
-    dispatch('open-editor');
-  }
 
   async function logout() {
     try {
@@ -81,7 +77,21 @@
   $: permSummary = $userInfo && $userInfo.permissions && $userInfo.permissions.length
     ? $userInfo.permissions.map(p => `${p.path || '*' }:${p.perm}`).join(', ')
     : '';
+
+  // 点击页面其他区域时关闭权限下拉
+  function handleWindowClick(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      showPermDropdown = false;
+      return;
+    }
+    if (!target.closest('.user-info-wrapper')) {
+      showPermDropdown = false;
+    }
+  }
 </script>
+
+<svelte:window on:click={handleWindowClick} />
 
 <header class="header">
   <div class="header-content">
@@ -147,10 +157,6 @@
             </div>
           {/if}
         </div>
-        <button class="btn-auth" on:click={openYamlEditor} title="编辑页面">
-          <i class="fas fa-edit"></i>
-          <span>编辑</span>
-        </button>
         <button class="btn-auth" on:click={logout} title="退出登录">
           <i class="fas fa-sign-out-alt"></i>
           <span>退出</span>

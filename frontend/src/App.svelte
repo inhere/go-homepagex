@@ -212,8 +212,11 @@
 
   function handleLogout() {
     userInfo.set(null);
-    // 退出后按游客身份重新加载数据
-    loadConfig(getRoute());
+    // 退出后跳转到首页并按游客身份重新加载数据
+    if (getRoute() !== '/') {
+      history.pushState({}, '', '/');
+    }
+    loadConfig('/');
   }
 </script>
 
@@ -247,7 +250,7 @@
         <Navbar navs={$pageConfig.navs} currentPath={$currentRoute} onNavigate={handleNavigate} />
       {/if}
 
-      <Toolbar onSearch={handleSearch} />
+      <Toolbar onSearch={handleSearch} onOpenEditor={openYamlEditor} />
 
       <div class="main-content">
         <aside class="sidebar">
